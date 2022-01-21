@@ -215,7 +215,7 @@ namespace Sleipnir {
     bool CSeekTools::LoadDatabase(const vector<CDatabase *> &DB,
                                   const size_t &iGenes, const size_t &iDatasets,
                                   vector<CSeekDataset *> &vc, const vector<CSeekDataset *> &vc_src,
-                                  vector <CSeekPlatform> &vp,
+                                  const vector <CSeekPlatform> &vp,
                                   const vector <string> &vecstrDatasets,
                                   const map <string, string> &mapstrstrDatasetPlatform,
                                   const map <string, utype> &mapstriPlatform) {
@@ -252,7 +252,7 @@ namespace Sleipnir {
                                   const vector<CSeekDBSetting *> &DBSetting,
                                   const vector <string> &vecstrDatasets,
                                   const map <string, string> &mapstrstrDatasetPlatform,
-                                  const map <string, utype> &mapstriPlatform, vector <CSeekPlatform> &vp,
+                                  const map <string, utype> &mapstriPlatform, const vector <CSeekPlatform> &vp,
                                   vector<CSeekDataset *> &vc, const vector <vector<string>> &dbDataset,
                                   const map <string, utype> &mapstriDataset,
                                   const bool bVariance, const bool bCorrelation) {

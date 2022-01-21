@@ -137,9 +137,11 @@ def readDatasetList(dsetFile):
         cols = line.rstrip("\n").split("\t")
         # expecting first column like 'dataset.platform.pcl'
         parts = cols[0].split(".")
-        if len(parts) < 2:
-            print(f"Error line({count}): expecting at first column of form datasetName.platformName.pcl")
-            break
+        if len(parts) < 3:
+            msg = f"seekUtils: readDatasetList: line({count}): {cols[0]}: expecting at first column of form datasetName.platformName.pcl"
+            raise ValueError(msg)
+        if parts[-1] != 'pcl':
+            print(f'Skipping non-pcl file {cols[0]}')
         if len(cols) == 1:
             # next column is 'dataset.platform'
             cols.append(f'{parts[0]}.{parts[1]}')
@@ -151,13 +153,32 @@ def readDatasetList(dsetFile):
                  print(f"Error line({count}): For two columns, expecting 'dataset.platform.pcl platform'")
             cols.insert(1, f'{parts[0]}.{parts[1]}')
         if len(cols) > 3:
-            print(f"Error line({count}): contains too many columns!\n");
-            break
+            msg = f"seekUtils: readDatasetList: line({count}): contains too many columns!"
+            raise ValueError(msg)
         else:
             dset_list.append(tuple(cols))
     fp.close()
     return dset_list
 
+def readPlatMap(platMapFile):
+    """
+    Read in platform mapping file and return the map from dataset name to platform name
+    """
+    dsetPlatMap = {}
+    with open(platMapFile, 'r') as fp:
+        for line in fp:
+            cols = line.rstrip("\n").split("\t")
+            parts = cols[0].split(".")
+            dsetName = parts[0]
+            if len(cols) > 1:
+                platName = cols[-1]
+            elif len(parts) > 1:
+                platName = parts[1]
+            else:
+                msg = f"seekUtils: readPlatMap: found only one column with no platform information"
+                raise ValueError(msg)
+            dsetPlatMap[dsetName] = platName
+    return dsetPlatMap
 
 def writeDatasetList(dset_list, dsetFile):
     fw = open(dsetFile, "w")

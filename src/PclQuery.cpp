@@ -74,7 +74,7 @@ void *do_pcl_query(void *th_arg) {
 
     fprintf(stderr, "start processing...\n");
 
-    string pcl_input_dir = cc->m_vecDBSetting[0]->pclDir;
+    string pcl_input_dir = cc->roAttr->m_vecDBSetting[0]->pclDir;
 
     // GW New Caching Algo
     int numDatasets = datasetNames.size();
@@ -152,8 +152,8 @@ void *do_pcl_query(void *th_arg) {
 
     float NaN = -9999;
 
-    map<string, utype> & platformMap = cc->m_seekPlatforms.getPlatformMap();
-    vector<CSeekPlatform> & seekPlatforms = cc->m_seekPlatforms.getCSeekPlatforms();
+    const map<string, utype> & platformMap = cc->roAttr->m_seekPlatforms.getPlatformMap();
+    const vector<CSeekPlatform> & seekPlatforms = cc->roAttr->m_seekPlatforms.getCSeekPlatforms();
 
     size_t i;
 
@@ -185,7 +185,7 @@ void *do_pcl_query(void *th_arg) {
         vqCoexpression.resize(queryName.size());
 
         CSeekDataset *vd = NULL;
-        CSeekPlatform *pl = NULL;
+        const CSeekPlatform *pl = NULL;
         sizeD[i] = (float) ps;
         d_vecG[i] = vector<float>();
         d_vecQ[i] = vector<float>();
@@ -206,12 +206,12 @@ void *do_pcl_query(void *th_arg) {
             string dsetName = datasetNames[i];
             dsetName = stripBinExtensions(dsetName);
 
-            auto dbid_iter = cc->m_mapstrintDatasetDB.find(dsetName);
-            if (dbid_iter == cc->m_mapstrintDatasetDB.end()) {
+            auto dbid_iter = cc->roAttr->m_mapstrintDatasetDB.find(dsetName);
+            if (dbid_iter == cc->roAttr->m_mapstrintDatasetDB.end()) {
                 // Try stripping .pcl extension
                 string tmpName = stripPclExtensions(dsetName);
-                dbid_iter = cc->m_mapstrintDatasetDB.find(tmpName);
-                if (dbid_iter == cc->m_mapstrintDatasetDB.end()) {
+                dbid_iter = cc->roAttr->m_mapstrintDatasetDB.find(tmpName);
+                if (dbid_iter == cc->roAttr->m_mapstrintDatasetDB.end()) {
                     hasError = true;
                     anError = "DbID not found in m_mapstrintDatasetDB: " + dsetName;
                     continue;
@@ -220,17 +220,17 @@ void *do_pcl_query(void *th_arg) {
             int dbID = dbid_iter->second;
 
             string strAvgPath =
-                    cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gavg"; //avg and prep path share same directory
-            string strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gpres";
-            string strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + dsetName + ".sinfo";
+                    cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gavg"; //avg and prep path share same directory
+            string strPresencePath = cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gpres";
+            string strSinfoPath = cc->roAttr->m_vecDBSetting[dbID]->sinfoDir + "/" + dsetName + ".sinfo";
 
             if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                 !filesystem::exists(strSinfoPath)) {
                 // Try stripping .pcl extension
                 string tmpName = stripPclExtensions(dsetName);
-                strAvgPath = cc->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gavg";
-                strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gpres";
-                strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + tmpName + ".sinfo";
+                strAvgPath = cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gavg";
+                strPresencePath = cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gpres";
+                strSinfoPath = cc->roAttr->m_vecDBSetting[dbID]->sinfoDir + "/" + tmpName + ".sinfo";
                 if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                     !filesystem::exists(strSinfoPath)) {
                     hasError = true;
@@ -244,12 +244,12 @@ void *do_pcl_query(void *th_arg) {
             vd->ReadDatasetAverageStdev(strSinfoPath);
             vd->InitializeGeneMap();
 
-            auto dp_iter = cc->m_mapstrstrDatasetPlatform.find(dsetName);
-            if (dp_iter == cc->m_mapstrstrDatasetPlatform.end()) {
+            auto dp_iter = cc->roAttr->m_mapstrstrDatasetPlatform.find(dsetName);
+            if (dp_iter == cc->roAttr->m_mapstrstrDatasetPlatform.end()) {
                 // Try stripping .pcl extension
                 string tmpName = stripPclExtensions(dsetName);
-                dp_iter = cc->m_mapstrstrDatasetPlatform.find(tmpName);
-                if (dp_iter == cc->m_mapstrstrDatasetPlatform.end()) {
+                dp_iter = cc->roAttr->m_mapstrstrDatasetPlatform.find(tmpName);
+                if (dp_iter == cc->roAttr->m_mapstrstrDatasetPlatform.end()) {
                     hasError = true;
                     anError = "Dataset not found in datasetPlatformMap: " + dsetName;
                     continue;
@@ -431,8 +431,14 @@ void *do_pcl_query(void *th_arg) {
 
                     p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
 
-                    int gID = cc->m_mapstrintGene[geneName[k]];
-                    int qID = cc->m_mapstrintGene[queryName[kk]];
+                    int gID = 0; // previous default case when []operator was used for m_mapstrintGene
+                    if (cc->roAttr->m_mapstrintGene.count(geneName[k]) > 0) {
+                        gID = cc->roAttr->m_mapstrintGene.at(geneName[k]);
+                    }
+                    int qID = 0;  // previous default case when []operator was used for m_mapstrintGene
+                    if (cc->roAttr->m_mapstrintGene.count(queryName[kk]) > 0) {
+                        qID = cc->roAttr->m_mapstrintGene.at(queryName[kk]);
+                    }
 
                     int qb = CMeta::Quantize(p, cc->m_quant);
                     p = cc->m_quant[qb];
@@ -462,13 +468,16 @@ void *do_pcl_query(void *th_arg) {
 
             const vector <string> gNames = pp->GetGeneNames();
             vector<char> qMap;
-            CSeekTools::InitVector(qMap, cc->m_vecstrGenes.size(), (char) 0);
+            CSeekTools::InitVector(qMap, cc->roAttr->m_vecstrGenes.size(), (char) 0);
 
             int totQuery = 0;
             for (k = 0; k < queryName.size(); k++) {
                 int g = pp->GetGene(queryName[k]);
                 if (g == -1) continue;
-                int mg = cc->m_mapstrintGene[queryName[k]];
+                int mg = 0;  // previous default case when []operator was used for m_mapstrintGene
+                if (cc->roAttr->m_mapstrintGene.count(queryName[k]) > 0) {
+                    mg = cc->roAttr->m_mapstrintGene.at(queryName[k]);
+                }
                 qMap[mg] = 1;
                 totQuery++;
             }
@@ -487,7 +496,11 @@ void *do_pcl_query(void *th_arg) {
 
                 for (kk = 0; kk < gNames.size(); kk++) {
                     int gg = pp->GetGene(gNames[kk]);
-                    ar[kk].i = (utype) cc->m_mapstrintGene[gNames[kk]];
+                    int id = 0; // previous default case when []operator was used for m_mapstrintGene
+                    if (cc->roAttr->m_mapstrintGene.count(gNames[kk]) > 0) {
+                        id = (utype) cc->roAttr->m_mapstrintGene.at(gNames[kk]);
+                    }
+                    ar[kk].i = (utype) id;
                     if (g == gg) {
                         ar[kk].f = 0;
                         continue;
@@ -514,8 +527,14 @@ void *do_pcl_query(void *th_arg) {
 
                     //get z-score (dataset wide)
                     p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
-                    int gID = cc->m_mapstrintGene[gNames[kk]];
-                    int qID = cc->m_mapstrintGene[queryName[k]];
+                    int gID = 0; // previous default case when []operator was used for m_mapstrintGene
+                    if (cc->roAttr->m_mapstrintGene.count(gNames[kk]) > 0) {
+                        gID = cc->roAttr->m_mapstrintGene.at(gNames[kk]);
+                    }
+                    int qID = 0;  // previous default case
+                    if (cc->roAttr->m_mapstrintGene.count(queryName[k]) > 0) {
+                        qID = cc->roAttr->m_mapstrintGene.at(queryName[k]);
+                    }
 
                     int qb = CMeta::Quantize(p, cc->m_quant);
                     p = cc->m_quant[qb];

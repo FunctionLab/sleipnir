@@ -93,14 +93,14 @@ class TestSeekCreateDB:
 
         # Test created db using SeekRPC
         # Run the server
-        cmd = f'{sleipnirBinDir}/SeekRPC -p {testPort} -c {seekrpcConfigFile}'
         # Note: for Popen we need to use shell=False for Popen or the .kill()
         #  method on the process will kill the shell but not the child process
         #  which in this case is SeekRPC. The other option is to use shell=True
         #  but prepend the command with 'exec ' + cmd. This will exec SeekRPC
         #  into the shell process.
         cmdlist = [f'{sleipnirBinDir}/SeekRPC', '-p', f'{testPort}', '-c', f'{seekrpcConfigFile}']
-        print(f'Run: {cmd}')
+        # print command line
+        print(f'### {" ".join(cmdlist)}')
         SeekServerProc = subprocess.Popen(cmdlist, shell=False)
         time.sleep(.5)
 

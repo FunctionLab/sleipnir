@@ -68,6 +68,16 @@ git clone https://github.com/FunctionLab/sleipnir.git
             - <code> make clean </code>
             - <code> make VERBOSE=1 </code>
 
+6. **[Optional]** Install SVM_PERF libraries to build: Data2SVM, SVMperfer, SVMperfing, SVMfe, SVMer
+    - <code> wget http://download.joachims.org/svm_perf/current/svm_perf.tar.gz </code>
+    - <code> mkdir svm_perf;  cd svm_perf; tar xzvf ../svm_perf.tar.gz</code>
+    - <code> make </code>
+    - <code> ar rcs libsvmperf.a *.o */*.o </code>
+    - <code> cd ..; cp -a svm_perf /usr/local/lib/ </code>
+    - <code> ln -s /usr/local/lib/svm_perf/libsvmperf.a /usr/local/lib </code>
+    - <code> ln -s /usr/local/lib/svm_perf /usr/local/include </code>
+
+
 ## **Tests:**
 0. One-time prep: create the conda environment (by default this will create the 'genomics' conda env)
     - <code>conda env create --file scripts/seek/conda_environment.yml</code>

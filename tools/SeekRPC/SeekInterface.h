@@ -55,6 +55,7 @@ class SeekInterface {
     void pclQuery(const PclQueryArgs &query, PclResult &result);
     int64_t pclQueryAsync(const PclQueryArgs &query);
     void getPclResult(int64_t task_id, bool block, PclResult &result);
+    int numTasksOutstanding();
     double getRpcVersion();
     int32_t ping();
   private:
@@ -80,7 +81,6 @@ class SeekInterface {
     double maxTaskTimeSec;
     thread _cleanerThread;
     atomic_int64_t next_task_id = 1;  // first task_id
-    bool pvalueEnabled = false;
  };
 
 #endif  // SEEKINTERFACE_H

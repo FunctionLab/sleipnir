@@ -29,6 +29,12 @@ if [ -z $seekbin ]; then
 fi
 
 # Requires a seek_env file that sets LD_LIBRARY_PATH for seek binaries
+if [ ! -f $seekdir/seek_env ]; then
+  echo "Error: File seek_env not found in dir $seekdir."
+  echo "Must be run where the SEEK DB is intalled and seek_env is present"
+  usage
+  exit -1
+fi
 echo "source $seekdir/seek_env"
 source $seekdir/seek_env
 

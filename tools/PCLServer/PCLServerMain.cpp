@@ -88,7 +88,7 @@ int main(int iArgs, char **aszArgs) {
 
     CSeekCentral seekCentral;
     seekCentral.InitializeFromSeekConfig(settings);
-    cout << "PCL Dir: " << seekCentral.m_vecDBSetting[0]->pclDir << endl;
+    cout << "PCL Dir: " << seekCentral.roAttr->m_vecDBSetting[0]->pclDir << endl;
 
     // Make a cache from string to shared_ptr CPCL - that way
     //  a returned shared pointer can be used without worrying

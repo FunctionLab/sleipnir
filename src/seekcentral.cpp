@@ -38,21 +38,12 @@
 namespace Sleipnir {
 
     CSeekCentral::CSeekCentral() {
-        m_vecstrGenes.clear();
-        m_vecstrDatasets.clear();
         m_vecstrSearchDatasets.clear();
-        m_mapstrstrDatasetPlatform.clear();
         m_vc.clear();
         m_quant.clear();
         m_vecstrAllQuery.clear();
-        m_seekPlatforms.clear();
-        m_vecstrDP.clear();
-        m_mapstrintDatasetDB.clear();
-        m_mapstrintDataset.clear();
-        m_mapstrintGene.clear();
         m_searchdsetMap.clear();
         m_vecDB.clear();
-        m_vecDBDataset.clear();
         m_rData = NULL;
         m_maxNumDB = 50;
 
@@ -89,7 +80,6 @@ namespace Sleipnir {
         m_bNegativeCor = false;
         m_DEFAULT_NA = -320;
 
-        m_vecDBSetting.clear();
         m_useNibble = false;
 
         DEBUG = false;
@@ -101,77 +91,20 @@ namespace Sleipnir {
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 10; //if checking for dataset size
-        m_mapstrintDatasetSize.clear();
     }
 
     CSeekCentral::~CSeekCentral() {
-        m_vecstrGenes.clear();
-        m_vecstrDatasets.clear();
+        // call common destructor
+        this->Destruct();
+
         m_vecstrSearchDatasets.clear();
-        m_mapstrstrDatasetPlatform.clear();
-        m_vecstrDP.clear();
-        m_mapstrintDatasetDB.clear();
-        m_mapstrintDataset.clear();
-        m_mapstrintGene.clear();
-
-        utype i, j;
-
-        for (i = 0; i < m_vc.size(); i++) {
-            if (m_vc[i] == NULL) continue;
-            delete m_vc[i];
-            m_vc[i] = NULL;
-        }
-        m_vc.clear();
 
         m_quant.clear();
-
-        for (i = 0; i < m_searchdsetMap.size(); i++) {
-            if (m_searchdsetMap[i] == NULL) continue;
-            delete m_searchdsetMap[i];
-            m_searchdsetMap[i] = NULL;
-        }
-        m_searchdsetMap.clear();
 
         //m_rData, m_master_rank_threads,
         //m_sum_weight_threads, m_counts_threads
         //m_rank_normal_threads, and m_rank_threads
         //should be already freed
-        if (m_master_rank_threads != NULL) {
-            CSeekTools::Free2DArray(m_master_rank_threads);
-            m_master_rank_threads = NULL;
-        }
-        if (m_sum_weight_threads != NULL) {
-            CSeekTools::Free2DArray(m_sum_weight_threads);
-            m_sum_weight_threads = NULL;
-        }
-        if (m_sum_sq_weight_threads != NULL) {
-            CSeekTools::Free2DArray(m_sum_sq_weight_threads);
-            m_sum_sq_weight_threads = NULL;
-        }
-        if (m_counts_threads != NULL) {
-            CSeekTools::Free2DArray(m_counts_threads);
-            m_counts_threads = NULL;
-        }
-        if (m_rank_normal_threads != NULL) {
-            for (j = 0; j < m_numThreads; j++)
-                m_rank_normal_threads[j].clear();
-            delete[] m_rank_normal_threads;
-            m_rank_normal_threads = NULL;
-        }
-        if (m_rank_threads != NULL) {
-            for (j = 0; j < m_numThreads; j++)
-                m_rank_threads[j].clear();
-            delete[] m_rank_threads;
-            m_rank_threads = NULL;
-        }
-
-        //m_rank_d is for Order Statistics aggregation only! Should be null already.
-        /*
-        if(m_rank_d!=NULL){
-            CSeekTools::Free2DArray(m_rank_d);
-            m_rank_d = NULL;
-        }*/
-        //note that m_rData already deleted after search
 
         m_master_rank.clear();
         m_sum_weight.clear();
@@ -179,20 +112,9 @@ namespace Sleipnir {
         m_counts.clear();
         m_weight.clear();
         m_final.clear();
-        m_vecDBDataset.clear();
 
         m_vecstrAllQuery.clear();
         m_Query.clear();
-
-        m_seekPlatforms.clear();
-
-        if (m_vecDB.size() != 0) {
-            for (i = 0; i < m_vecDB.size(); i++) {
-                delete m_vecDB[i];
-                m_vecDB[i] = NULL;
-            }
-            m_vecDB.clear();
-        }
 
         m_iDatasets = 0;
         m_iGenes = 0;
@@ -201,20 +123,11 @@ namespace Sleipnir {
         m_output_dir = "";
         DEBUG = false;
 
-        for (i = 0; i < m_vecDBSetting.size(); i++) {
-            if (m_vecDBSetting[i] != NULL) {
-                delete m_vecDBSetting[i];
-                m_vecDBSetting[i] = NULL;
-            }
-        }
-
-        m_vecDBSetting.clear();
         m_useNibble = false;
         m_bNegativeCor = false;
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 0;
-        m_mapstrintDatasetSize.clear();
     }
 
     bool CSeekCentral::CalculateRestart() {
@@ -283,6 +196,9 @@ namespace Sleipnir {
         fprintf(stderr, "Request received from client\n");
         assert(m_missingInitParams == false);
 
+        // Copy a pointer to the read only attributes
+        roAttr = src->roAttr;
+
         m_output_dir = output_dir; //LATER, TO BE DELETED
         m_maxNumDB = src->m_maxNumDB;
         //m_bSharedDB = true;
@@ -314,39 +230,14 @@ namespace Sleipnir {
         m_iNumRandom = 1;
         m_randRandom = NULL;
 
-        m_vecstrGenes.resize(src->m_vecstrGenes.size());
-        copy(src->m_vecstrGenes.begin(), src->m_vecstrGenes.end(), m_vecstrGenes.begin());
-
-        m_vecstrDatasets.resize(src->m_vecstrDatasets.size());
-        copy(src->m_vecstrDatasets.begin(), src->m_vecstrDatasets.end(), m_vecstrDatasets.begin());
-
-        m_mapstrintDataset.insert(src->m_mapstrintDataset.begin(),
-                                  src->m_mapstrintDataset.end());
-
-        m_mapstrintGene.insert(src->m_mapstrintGene.begin(), src->m_mapstrintGene.end());
-
-        m_mapstrstrDatasetPlatform.insert(src->m_mapstrstrDatasetPlatform.begin(),
-                                          src->m_mapstrstrDatasetPlatform.end());
-
-        m_mapstrintDatasetDB.insert(src->m_mapstrintDatasetDB.begin(),
-                                          src->m_mapstrintDatasetDB.end());
-
-        m_seekPlatforms.copy(src->m_seekPlatforms);
-    
-        m_vecstrDP.resize(src->m_vecstrDP.size());
-        copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
-
-        m_mapstrintDatasetSize.insert(src->m_mapstrintDatasetSize.begin(),
-                                      src->m_mapstrintDatasetSize.end());
-
         m_quant = src->m_quant;
         utype i, j;
         omp_set_num_threads(m_numThreads);
 
-        m_iDatasets = m_vecstrDatasets.size();
-        m_iGenes = m_vecstrGenes.size();
+        m_iDatasets = roAttr->m_vecstrDatasets.size();
+        m_iGenes = roAttr->m_vecstrGenes.size();
 
-        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+        if (m_bCheckDsetSize && roAttr->m_mapstrintDatasetSize.size() == 0) {
             throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
         }
 
@@ -359,19 +250,25 @@ namespace Sleipnir {
             vector <string> vecsearchDset;
             if (sd[i] == "" or sd[i] == "NA") {
                 // include all datasets as part of search
-                for (j = 0; j < m_vecstrDatasets.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[m_vecstrDatasets[j]] <
+                for (j = 0; j < roAttr->m_vecstrDatasets.size(); j++) {
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(roAttr->m_vecstrDatasets[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(roAttr->m_vecstrDatasets[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
-                    m_vecstrSearchDatasets[i].push_back(m_vecstrDatasets[j]);
+                    m_vecstrSearchDatasets[i].push_back(roAttr->m_vecstrDatasets[j]);
                 }
             } else {
                 CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
                 for (j = 0; j < vecsearchDset.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(vecsearchDset[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(vecsearchDset[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
                 }
@@ -388,22 +285,15 @@ namespace Sleipnir {
 
         m_searchdsetMap.resize(m_vecstrAllQuery.size());
         for (i = 0; i < m_vecstrAllQuery.size(); i++) {
-            m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
-            for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++)
-                m_searchdsetMap[i]->Add(
-                        m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+            m_searchdsetMap[i] = new CSeekIntIntMap(roAttr->m_vecstrDatasets.size());
+            for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++) {
+                if (roAttr->m_mapstrintDataset.count(m_vecstrSearchDatasets[i][j]) > 0) {
+                    m_searchdsetMap[i]->Add(
+                            roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                }
+            }
         }
 
-        m_vecDBDataset.resize(src->m_vecDB.size());
-        for (i = 0; i < src->m_vecDB.size(); i++) {
-            m_vecDBDataset[i].resize(src->m_vecDBDataset[i].size());
-            copy(src->m_vecDBDataset[i].begin(), src->m_vecDBDataset[i].end(),
-                 m_vecDBDataset[i].begin());
-        }
-
-        m_vecDBSetting.resize(src->m_vecDBSetting.size());
-        for (i = 0; i < m_vecDBSetting.size(); i++)
-            m_vecDBSetting[i] = new CSeekDBSetting(src->m_vecDBSetting[i]);
         m_useNibble = src->m_useNibble;
 
         m_vecDB.resize(src->m_vecDB.size());
@@ -414,17 +304,17 @@ namespace Sleipnir {
             bool res;
             m_vecDB[i] = NULL;
             m_vecDB[i] = new CDatabase(m_useNibble);
-            res = m_vecDB[i]->Open(m_vecDBSetting[i]->dbDir,
-                                   m_vecstrGenes, m_vecDBDataset[i].size(),
-                                   m_vecDBSetting[i]->GetNumDB());
+            res = m_vecDB[i]->Open(roAttr->m_vecDBSetting[i]->dbDir,
+                                   roAttr->m_vecstrGenes, roAttr->m_vecDBDataset[i].size(),
+                                   roAttr->m_vecDBSetting[i]->GetNumDB());
             if (res == false) {
                 return false;
             }
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
-                                 m_vc, src->m_vc, m_seekPlatforms.getCSeekPlatforms(), m_vecstrDatasets,
-                                 m_mapstrstrDatasetPlatform, m_seekPlatforms.getPlatformMap());
+                                 m_vc, src->m_vc, roAttr->m_seekPlatforms.getCSeekPlatforms(), roAttr->m_vecstrDatasets,
+                                 roAttr->m_mapstrstrDatasetPlatform, roAttr->m_seekPlatforms.getPlatformMap());
 
         if (!CalculateRestart()) {
             fprintf(stderr, "Error occurred during CalculateRestart()\n");
@@ -493,11 +383,11 @@ namespace Sleipnir {
                 CSeekIntIntMap *si = m_vc[i]->GetGeneMap();
                 utype present = 0;
                 for (j = 0, present = 0; j < m_vecstrAllQuery[l].size(); j++) {
-                    if (m_mapstrintGene.find(m_vecstrAllQuery[l][j]) ==
-                        m_mapstrintGene.end())
+                    if (roAttr->m_mapstrintGene.find(m_vecstrAllQuery[l][j]) ==
+                        roAttr->m_mapstrintGene.end())
                         continue;
                     if (CSeekTools::IsNaN(si->GetForward(
-                            m_mapstrintGene[m_vecstrAllQuery[l][j]])))
+                            roAttr->m_mapstrintGene.at(m_vecstrAllQuery[l][j]))))
                         continue;
                     count[j]++;
                     present++;
@@ -524,9 +414,9 @@ namespace Sleipnir {
                     si->GetNumSet() >= minGRequired) {
                     if (isFirst) {
                         isFirst = false;
-                        ss << m_vecstrDatasets[i];
+                        ss << roAttr->m_vecstrDatasets[i];
                     } else {
-                        ss << " " << m_vecstrDatasets[i];
+                        ss << " " << roAttr->m_vecstrDatasets[i];
                     }
                 }
             }
@@ -603,7 +493,7 @@ namespace Sleipnir {
                 CMeta::Tokenize(qq[i].c_str(), m_vecstrAllQuery[i], " ", true);
             }
 
-            if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+            if (m_bCheckDsetSize && roAttr->m_mapstrintDatasetSize.size() == 0) {
                 throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
             }
 
@@ -616,9 +506,12 @@ namespace Sleipnir {
                 vector <string> vecsearchDset;
                 CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
                 for (j = 0; j < vecsearchDset.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(vecsearchDset[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(vecsearchDset[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
                 }
@@ -637,10 +530,13 @@ namespace Sleipnir {
 
             m_searchdsetMap.resize(m_vecstrAllQuery.size());
             for (i = 0; i < m_vecstrAllQuery.size(); i++) {
-                m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
-                for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++)
-                    m_searchdsetMap[i]->Add(
-                            m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+                m_searchdsetMap[i] = new CSeekIntIntMap(roAttr->m_vecstrDatasets.size());
+                for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++) {
+                    if (roAttr->m_mapstrintDataset.count(m_vecstrSearchDatasets[i][j]) > 0) {
+                        m_searchdsetMap[i]->Add(
+                                roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                    }
+                }
             }
 
         }
@@ -716,6 +612,8 @@ namespace Sleipnir {
                                   const bool bNegativeCor, const bool bCheckDatasetSize,
                                   gsl_rng *rand, const bool useNibble, const int numThreads) {
 
+        auto attr = make_shared<ReadOnlyAttributes>();
+
         m_maxNumDB = buffer;
         m_numThreads = numThreads; //changed from 8
 
@@ -772,10 +670,10 @@ namespace Sleipnir {
         //read genes
         vector <string> vecstrGeneID;
         if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->geneMapFile,
-                                            vecstrGeneID, m_vecstrGenes))
+                                            vecstrGeneID, attr->m_vecstrGenes))
             return false;
-        for (i = 0; i < m_vecstrGenes.size(); i++)
-            m_mapstrintGene[m_vecstrGenes[i]] = i;
+        for (i = 0; i < attr->m_vecstrGenes.size(); i++)
+            attr->m_mapstrintGene[attr->m_vecstrGenes[i]] = i;
 
         // read gene symbol map if provided
         if (vecDBSetting[0]->geneSymbolFile != "NA") {
@@ -788,16 +686,16 @@ namespace Sleipnir {
             // create forward and reverse map
             uint32_t numGenes = geneEntrez.size();
             for (int i=0; i<numGenes; i++) {
-                m_geneEntrezToSymbolMap.insert({geneEntrez[i], geneSymbol[i]});
-                m_geneSymbolToEntrezMap.insert({geneSymbol[i], geneEntrez[i]});
+                attr->m_geneEntrezToSymbolMap.insert({geneEntrez[i], geneSymbol[i]});
+                attr->m_geneSymbolToEntrezMap.insert({geneSymbol[i], geneEntrez[i]});
             }
-            if (m_geneEntrezToSymbolMap.size() != numGenes) {
+            if (attr->m_geneEntrezToSymbolMap.size() != numGenes) {
                 throw init_error(FILELINE + "entrezToSymbol map count mismatch: " +
-                                 to_string(m_geneEntrezToSymbolMap.size()) +
+                                 to_string(attr->m_geneEntrezToSymbolMap.size()) +
                                  ", " + to_string(numGenes));
             }
-            if (m_geneSymbolToEntrezMap.size() != numGenes) {
-                uint32_t numDups = numGenes - m_geneSymbolToEntrezMap.size();
+            if (attr->m_geneSymbolToEntrezMap.size() != numGenes) {
+                uint32_t numDups = numGenes - attr->m_geneSymbolToEntrezMap.size();
                 cerr << "Warning: duplicate symbols in symbolToEntrez map: " << numDups << endl;
             }
         }
@@ -809,22 +707,22 @@ namespace Sleipnir {
             m_missingInitParams = true;
         }
 
-        m_vecstrDatasets.clear();
-        m_vecstrDP.clear();
-        m_mapstrintDatasetDB.clear();
-        m_mapstrstrDatasetPlatform.clear();
-        m_mapstrintDataset.clear();
+        attr->m_vecstrDatasets.clear();
+        attr->m_vecstrDP.clear();
+        attr->m_mapstrintDatasetDB.clear();
+        attr->m_mapstrstrDatasetPlatform.clear();
+        attr->m_mapstrintDataset.clear();
 
-        m_seekPlatforms.clear();
+        attr->m_seekPlatforms.clear();
 
         m_vecDB.resize(vecDBSetting.size());
-        m_vecDBDataset.resize(vecDBSetting.size());
+        attr->m_vecDBDataset.resize(vecDBSetting.size());
         for (i = 0; i < vecDBSetting.size(); i++)
             m_vecDB[i] = NULL;
 
-        m_vecDBSetting.resize(vecDBSetting.size());
-        for (i = 0; i < m_vecDBSetting.size(); i++)
-            m_vecDBSetting[i] = new CSeekDBSetting(vecDBSetting[i]);
+        attr->m_vecDBSetting.resize(vecDBSetting.size());
+        for (i = 0; i < attr->m_vecDBSetting.size(); i++)
+            attr->m_vecDBSetting[i] = new CSeekDBSetting(vecDBSetting[i]);
 
         m_useNibble = useNibble;
 
@@ -850,10 +748,10 @@ namespace Sleipnir {
                 }
             }
             for (j = 0; j < vD.size(); j++) {
-                m_vecstrDatasets.push_back(vD[j]);
-                m_vecDBDataset[i].push_back(vD[j]);
-                m_vecstrDP.push_back(vDP[j]);
-                m_mapstrintDatasetDB[vD[j]] = (int) i;
+                attr->m_vecstrDatasets.push_back(vD[j]);
+                attr->m_vecDBDataset[i].push_back(vD[j]);
+                attr->m_vecstrDP.push_back(vDP[j]);
+                attr->m_mapstrintDatasetDB[vD[j]] = (int) i;
             }
 
             if (vecDBSetting[i]->dsetSizeFile != "NA") {
@@ -868,10 +766,10 @@ namespace Sleipnir {
                                 col1[j].c_str());
                         return false;
                     }
-                    m_mapstrintDatasetSize[col1[j]] = (utype) atoi(col2[j].c_str());
+                    attr->m_mapstrintDatasetSize[col1[j]] = (utype) atoi(col2[j].c_str());
                 }
                 for (j = 0; j < vD.size(); j++) {
-                    if (m_mapstrintDatasetSize.find(vD[j]) == m_mapstrintDatasetSize.end()) {
+                    if (attr->m_mapstrintDatasetSize.find(vD[j]) == attr->m_mapstrintDatasetSize.end()) {
                         fprintf(stderr, "There is no dataset size entry for %s\n", vD[j].c_str());
                         return false;
                     }
@@ -885,25 +783,25 @@ namespace Sleipnir {
                 assert(!platformDir.empty() && platformDir != "NA");
                 db_platforms.loadPlatformDataFromFiles(platformDir);
                 // Combine the new db platform statistics with the main db stats
-                m_seekPlatforms.combineWithPlatform(db_platforms);
+                attr->m_seekPlatforms.combineWithPlatform(db_platforms);
             } else {
                 m_missingInitParams = true;
             }
         }
 
-        for (i = 0; i < m_vecstrDatasets.size(); i++) {
-            m_mapstrstrDatasetPlatform[m_vecstrDatasets[i]] = m_vecstrDP[i];
-            m_mapstrintDataset[m_vecstrDatasets[i]] = i;
+        for (i = 0; i < attr->m_vecstrDatasets.size(); i++) {
+            attr->m_mapstrstrDatasetPlatform[attr->m_vecstrDatasets[i]] = attr->m_vecstrDP[i];
+            attr->m_mapstrintDataset[attr->m_vecstrDatasets[i]] = i;
         }
 
-        m_iDatasets = m_vecstrDatasets.size();
-        m_iGenes = m_vecstrGenes.size();
+        m_iDatasets = attr->m_vecstrDatasets.size();
+        m_iGenes = attr->m_vecstrGenes.size();
 
         for (i = 0; i < vecDBSetting.size(); i++) {
             if (vecDBSetting[i]->dbDir != "NA") { 
                 bool res;
                 res = m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
-                                    m_vecstrGenes, m_vecDBDataset[i].size(),
+                                    attr->m_vecstrGenes, attr->m_vecDBDataset[i].size(),
                                     vecDBSetting[i]->GetNumDB());
                 if (res == false) {
                     return false;
@@ -915,12 +813,13 @@ namespace Sleipnir {
 
         if (!m_missingInitParams) {
             CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
-                                    vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
-                                    m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
-                                    m_vc, m_vecDBDataset, m_mapstrintDataset,
+                                    vecDBSetting, attr->m_vecstrDatasets, attr->m_mapstrstrDatasetPlatform,
+                                    attr->m_seekPlatforms.getPlatformMap(), attr->m_seekPlatforms.getCSeekPlatforms(),
+                                    m_vc, attr->m_vecDBDataset, attr->m_mapstrintDataset,
                                     bVariance, bCorrelation);
         }
 
+        this->roAttr = attr;
         return true;
     }
 
@@ -951,7 +850,7 @@ namespace Sleipnir {
         omp_set_num_threads(m_numThreads);
         m_output_dir = output_dir;
 
-        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+        if (m_bCheckDsetSize && roAttr->m_mapstrintDatasetSize.size() == 0) {
             throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
         }
 
@@ -970,12 +869,15 @@ namespace Sleipnir {
 
         if (strSearchDset == "NA") {
             for (i = 0; i < m_vecstrAllQuery.size(); i++) {
-                for (j = 0; j < m_vecstrDatasets.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[m_vecstrDatasets[j]] <
+                for (j = 0; j < roAttr->m_vecstrDatasets.size(); j++) {
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(roAttr->m_vecstrDatasets[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(roAttr->m_vecstrDatasets[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
-                    m_vecstrSearchDatasets[i].push_back(m_vecstrDatasets[j]);
+                    m_vecstrSearchDatasets[i].push_back(roAttr->m_vecstrDatasets[j]);
                 }
             }
         } else {
@@ -990,9 +892,12 @@ namespace Sleipnir {
             }
             for (i = 0; i < m_vecstrAllQuery.size(); i++) {
                 for (j = 0; j < vecsearchDset.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[i][j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(vecsearchDset[i][j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(vecsearchDset[i][j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(vecsearchDset[i][j]);
                 }
@@ -1006,10 +911,12 @@ namespace Sleipnir {
         //fprintf(stderr, "Making search dset map...\n");
         m_searchdsetMap.resize(m_vecstrAllQuery.size());
         for (i = 0; i < m_vecstrAllQuery.size(); i++) {
-            m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
+            m_searchdsetMap[i] = new CSeekIntIntMap(roAttr->m_vecstrDatasets.size());
             for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++) {
-                m_searchdsetMap[i]->Add(
-                        m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+                if (roAttr->m_mapstrintDataset.count(m_vecstrSearchDatasets[i][j]) > 0) {
+                    m_searchdsetMap[i]->Add(
+                            roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                }
             }
         }
 
@@ -1029,13 +936,13 @@ namespace Sleipnir {
         vector <utype> queryGenes;
         utype j;
         for (j = 0; j < vecstrQuery.size(); j++) {
-            if (m_mapstrintGene.find(vecstrQuery[j]) ==
-                m_mapstrintGene.end())
+            if (roAttr->m_mapstrintGene.find(vecstrQuery[j]) ==
+                roAttr->m_mapstrintGene.end())
                 continue;
             //size_t m = m_DB->GetGene(vecstrQuery[j]);
             //if(m==-1) continue;
             //queryGenes.push_back(m);
-            queryGenes.push_back(m_mapstrintGene[vecstrQuery[j]]);
+            queryGenes.push_back(roAttr->m_mapstrintGene.at(vecstrQuery[j]));
         }
         queryGenes.resize(queryGenes.size());
         query.InitializeQuery(queryGenes, m_iGenes);
@@ -1194,7 +1101,7 @@ namespace Sleipnir {
                 break;
             }
             uint32_t geneId = sortedGeneScore[i].i;
-            string geneName = m_vecstrGenes[geneId];
+            string geneName = roAttr->m_vecstrGenes[geneId];
             geneResult[i].key = geneName;
             geneResult[i].val = geneScore;
         }
@@ -1212,7 +1119,7 @@ namespace Sleipnir {
                 break;
             }
             uint32_t datasetId = sortedDatasetWeight[i].i;
-            string datasetName = m_vecstrDatasets[datasetId];
+            string datasetName = roAttr->m_vecstrDatasets[datasetId];
             datasetResult[i].key = datasetName;
             datasetResult[i].val = datasetWeight;
         }
@@ -1229,7 +1136,7 @@ namespace Sleipnir {
             //fprintf(stderr, "%s %.5f\n",
             //	m_DB->GetGene((size_t)final[ii].i).c_str(), final[ii].f);
             fprintf(stderr, "%s %.5f\n",
-                    m_vecstrGenes[(size_t) final[ii].i].c_str(), final[ii].f);
+                    roAttr->m_vecstrGenes[(size_t) final[ii].i].c_str(), final[ii].f);
             jj++;
         }
         return true;
@@ -1273,14 +1180,14 @@ namespace Sleipnir {
             getSortedDatasetScores(i, w);
             for (int j = 0; j < 200 && j < iSearchDatasets; j++) {
                 if (w[j].f == 0) break;
-                vecOutput[0].push_back(m_vecstrDatasets[w[j].i]);
+                vecOutput[0].push_back(roAttr->m_vecstrDatasets[w[j].i]);
             }
             // Get sorted gene scores
             vector <AResultFloat> wd;
             getSortedGeneScores(wd);
             for (int j = 0; j < 2000 && j < wd.size(); j++) {
                 if (wd[j].f == m_DEFAULT_NA) break;
-                vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
+                vecOutput[1].push_back(roAttr->m_vecstrGenes[wd[j].i]);
             }
             CSeekTools::Write2DArrayText(acBuffer, vecOutput);
         }
@@ -1290,7 +1197,7 @@ namespace Sleipnir {
     int CSeekCentral::GetMaxGenomeCoverage() {
         utype d;
         int max = 0;
-        for (d = 0; d < m_vecstrDatasets.size(); d++) {
+        for (d = 0; d < roAttr->m_vecstrDatasets.size(); d++) {
             CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
             if (mapG->GetNumSet() > max) {
                 max = mapG->GetNumSet();
@@ -1396,8 +1303,8 @@ namespace Sleipnir {
                 if (!m_bRandom || l == 0) { //l==0: first random repetition
                     // load query genes into m_vc a vector of CSeekDatasets
                     CSeekTools::ReadDatabaselets(m_vecDB, m_iGenes, m_iDatasets,
-                                                 m_mapLoadTime[i], m_vc, m_mapstrintGene, m_vecDBDataset,
-                                                 m_mapstrintDataset, m_iClient, m_bEnableNetwork);
+                                                 m_mapLoadTime[i], m_vc, roAttr->m_mapstrintGene, roAttr->m_vecDBDataset,
+                                                 roAttr->m_mapstrintDataset, m_iClient, m_bEnableNetwork);
                 }
             }
 
@@ -1451,7 +1358,7 @@ namespace Sleipnir {
                 utype tid = omp_get_thread_num();
                 if (DEBUG)
                     fprintf(stderr, "Dataset %d, %s\n",
-                            d, m_vecstrDatasets[d].c_str());
+                            d, roAttr->m_vecstrDatasets[d].c_str());
 
                 CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
                 CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
@@ -1738,8 +1645,8 @@ namespace Sleipnir {
                         const vector <utype> &vu = query.GetCVQuery(j);
                         string s = "";
                         for (kk = 0; kk < vu.size(); kk++) {
-                            vecParts[j].push_back(m_vecstrGenes[vu[kk]]);
-                            s += m_vecstrGenes[vu[kk]];
+                            vecParts[j].push_back(roAttr->m_vecstrGenes[vu[kk]]);
+                            s += roAttr->m_vecstrGenes[vu[kk]];
                             if (kk != vu.size() - 1)
                                 s += " ";
                         }
@@ -1871,13 +1778,64 @@ namespace Sleipnir {
     }
 
     bool CSeekCentral::Destruct() {
-        utype j;
-        //for(j=0; j<m_iDatasets; j++) m_vc[j]->DeleteQueryBlock();
-        for (j = 0; j < m_iDatasets; j++) {
-            if (m_vc[j] == NULL) continue;
-            delete m_vc[j];
-            m_vc[j] = NULL;
+        int i;
+        for (i = 0; i < m_vc.size(); i++) {
+            if (m_vc[i] == NULL) continue;
+            delete m_vc[i];
+            m_vc[i] = NULL;
         }
+        m_vc.clear();
+
+        for (i = 0; i < m_searchdsetMap.size(); i++) {
+            if (m_searchdsetMap[i] == NULL) continue;
+            delete m_searchdsetMap[i];
+            m_searchdsetMap[i] = NULL;
+        }
+        m_searchdsetMap.clear();
+
+        for (i = 0; i < m_vecDB.size(); i++) {
+            if (m_vecDB[i] == NULL) continue;
+            delete m_vecDB[i];
+            m_vecDB[i] = NULL;
+        }
+        m_vecDB.clear();
+
+        if (m_master_rank_threads != NULL) {
+            CSeekTools::Free2DArray(m_master_rank_threads);
+            m_master_rank_threads = NULL;
+        }
+        if (m_sum_weight_threads != NULL) {
+            CSeekTools::Free2DArray(m_sum_weight_threads);
+            m_sum_weight_threads = NULL;
+        }
+        if (m_sum_sq_weight_threads != NULL) {
+            CSeekTools::Free2DArray(m_sum_sq_weight_threads);
+            m_sum_sq_weight_threads = NULL;
+        }
+        if (m_counts_threads != NULL) {
+            CSeekTools::Free2DArray(m_counts_threads);
+            m_counts_threads = NULL;
+        }
+        if (m_rank_normal_threads != NULL) {
+            for (i = 0; i < m_numThreads; i++)
+                m_rank_normal_threads[i].clear();
+            delete[] m_rank_normal_threads;
+            m_rank_normal_threads = NULL;
+        }
+        if (m_rank_threads != NULL) {
+            for (i = 0; i < m_numThreads; i++)
+                m_rank_threads[i].clear();
+            delete[] m_rank_threads;
+            m_rank_threads = NULL;
+        }
+
+        //m_rank_d is for Order Statistics aggregation only! Should be null already.
+        //note that m_rData already deleted after search
+        if (m_rank_d != NULL){
+            CSeekTools::Free2DArray(m_rank_d);
+            m_rank_d = NULL;
+        }
+
         return true;
     }
 
@@ -1890,13 +1848,13 @@ namespace Sleipnir {
     }
 
     utype CSeekCentral::GetGeneId(const string &strGene) const {
-        if (m_mapstrintGene.find(strGene) == m_mapstrintGene.end())
+        if (roAttr->m_mapstrintGene.find(strGene) == roAttr->m_mapstrintGene.end())
             return CSeekTools::GetNaN();
-        return m_mapstrintGene.find(strGene)->second;
+        return roAttr->m_mapstrintGene.find(strGene)->second;
     }
 
     string CSeekCentral::GetGeneName(const utype &geneID) const {
-        return m_vecstrGenes[(size_t) geneID];
+        return roAttr->m_vecstrGenes[(size_t) geneID];
     }
 
     const vector <vector<float>> &CSeekCentral::GetAllWeight() const {
@@ -1908,8 +1866,8 @@ namespace Sleipnir {
         symbols.resize(numGenes);
         for (int i=0; i<numGenes; i++) {
             try {
-                if (m_geneEntrezToSymbolMap.count(entrez[i]) > 0) {
-                    symbols[i] = m_geneEntrezToSymbolMap.at(entrez[i]);
+                if (roAttr->m_geneEntrezToSymbolMap.count(entrez[i]) > 0) {
+                    symbols[i] = roAttr->m_geneEntrezToSymbolMap.at(entrez[i]);
                 } else {
                     symbols[i] = entrez[i];
                 }
@@ -1924,7 +1882,7 @@ namespace Sleipnir {
         entrez.resize(numGenes);
         for (int i=0; i<numGenes; i++) {
             try {
-                entrez[i] = m_geneSymbolToEntrezMap.at(symbols[i]);
+                entrez[i] = roAttr->m_geneSymbolToEntrezMap.at(symbols[i]);
             } catch(exception &err) {
                 throw_with_nested(request_error(FILELINE + "symbol not found: " + symbols[i]));
             }
@@ -1933,8 +1891,8 @@ namespace Sleipnir {
 
     string CSeekCentral::entrezToSymbol(string &entrez) {
         try {
-            if (m_geneEntrezToSymbolMap.count(entrez) > 0) {
-                return m_geneEntrezToSymbolMap.at(entrez);
+            if (roAttr->m_geneEntrezToSymbolMap.count(entrez) > 0) {
+                return roAttr->m_geneEntrezToSymbolMap.at(entrez);
             } else {
                 return entrez;
             }

@@ -40,7 +40,7 @@ void *do_pvalue_query(void *th_arg) {
     int queryType = my->queryType;
     CSeekCentral *cc = my->seekCentral;
     PValueData *pvalueData = my->pvalueData;
-    int numGenes = cc->m_vecstrGenes.size();
+    int numGenes = cc->roAttr->m_vecstrGenes.size();
 
     vector <string> &dset = my->dset;
     vector<float> &dset_score = my->dset_score;
@@ -58,7 +58,7 @@ void *do_pvalue_query(void *th_arg) {
     if (queryType == 1) { //dataset
         // TODO - dataset pvalues not completely adapted or tested to SeekRPCServer yet
         for (i = 0; i < dset.size(); i++) {
-            if (cc->m_mapstrintDataset.find(dset[i]) == cc->m_mapstrintDataset.end()) {
+            if (cc->roAttr->m_mapstrintDataset.find(dset[i]) == cc->roAttr->m_mapstrintDataset.end()) {
                 fprintf(stderr, "Error: cannot find dataset %s\n", dset[i].c_str());
                 pval.push_back(-1);
                 continue;
@@ -71,7 +71,10 @@ void *do_pvalue_query(void *th_arg) {
                 pval.push_back(0.99);
                 continue;
             }
-            int pi = cc->m_mapstrintDataset[dset[i]];
+            int pi = 0; // previous default case when []operator was used for m_mapstrintDataset
+            if (cc->roAttr->m_mapstrintDataset.count(dset[i]) > 0) {
+                pi = cc->roAttr->m_mapstrintDataset.at(dset[i]);
+            }
             float sc = log(dset_score[i]);
             int qsize = dset_qsize[i];
             if (pvalueData->dsetScore[pi].size() == 0) {
@@ -192,7 +195,11 @@ void *do_pvalue_query(void *th_arg) {
                     }
                     geneIds.resize(geneEntrezIds.size());
                     for (i = 0; i < geneIds.size(); i++) {
-                        geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
+                        int id = 0;
+                        if (cc->roAttr->m_mapstrintGene.count(geneEntrezIds[i]) > 0) {
+                            id = cc->roAttr->m_mapstrintGene.at(geneEntrezIds[i]);
+                        }
+                        geneIds[i] = id;
                     }
                 }
                 if (geneRanks.size() != geneIds.size()) {
@@ -213,7 +220,11 @@ void *do_pvalue_query(void *th_arg) {
                     // convert entrezIds to geneIds
                     geneIds.resize(geneEntrezIds.size());
                     for (i=0; i<geneEntrezIds.size(); i++) {
-                        geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
+                        int id = 0;
+                        if (cc->roAttr->m_mapstrintGene.count(geneEntrezIds[i]) > 0) {
+                            id = cc->roAttr->m_mapstrintGene.at(geneEntrezIds[i]);
+                        }
+                        geneIds[i] = id;
                     }
                 }
                 if (geneScores.size() != geneIds.size()) {
@@ -347,6 +358,7 @@ bool loadPvalueArrays(string dirname, PValueData &pvalueData) {
     rankFile /= "randomRankFile.bin";
     if (!filesystem::exists(scoreFile) || !filesystem::exists(rankFile)) {
         cerr << "WARNING: PValue parameter files not found: " << scoreFile << ", " << rankFile << endl;
+        cerr << "Will try building Pvalue parameter files from the random queries" << endl;
         return false;
     }
     read2DVector(pvalueData.randomSc, scoreFile);
@@ -355,10 +367,10 @@ bool loadPvalueArrays(string dirname, PValueData &pvalueData) {
 }
 
 bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData &pvalueData) {
-    int numGenes = seekCentral.m_vecstrGenes.size();
+    int numGenes = seekCentral.roAttr->m_vecstrGenes.size();
     int numRandFiles = 0;
     vector <string> gscoreFiles;
-    string random_directory = seekCentral.m_vecDBSetting[0]->pvalueDir;
+    string random_directory = seekCentral.roAttr->m_vecDBSetting[0]->pvalueDir;
     if (!filesystem::exists(random_directory)) {
         cerr << "WARNING: Random query directory doesn't exist: " << random_directory << endl;
         return false;

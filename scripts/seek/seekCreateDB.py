@@ -103,7 +103,10 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
             if not os.path.exists(cfg.queryFile):
                 raise FileNotFoundError(f'{cfg.queryFile}')
         # Run the random queries
-        sutils.runSeekMiner(cfg, cfg.queryFile, randDir, concurrency)
+        overrideConcurrency = 10
+        if concurrency < 10:
+            overrideConcurrency = concurrency
+        sutils.runSeekMiner(cfg, cfg.queryFile, randDir, overrideConcurrency)
     return True
 
 

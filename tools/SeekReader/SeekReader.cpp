@@ -954,8 +954,8 @@ int main(int iArgs, char **aszArgs) {
 
         SeekPlatforms platforms;
         platforms.loadPlatformDataFromFiles(sArgs.platform_dir_arg);
-        vector<CSeekPlatform> &vp = platforms.getCSeekPlatforms();
-        map<string, utype> &mapstriPlatform = platforms.getPlatformMap();
+        const vector<CSeekPlatform> &vp = platforms.getCSeekPlatforms();
+        const map<string, utype> &mapstriPlatform = platforms.getPlatformMap();
         //fprintf(stderr, "Finished reading platform\n");
 
         vector < CSeekDataset * > vc;

@@ -8,6 +8,7 @@
 #include "PclQuery.h"
 #include "SeekPValue.h"
 #include "gen-cpp/seek_rpc_constants.h"
+// #include "/usr/local/Cellar/gperftools/2.9.1_1/include/gperftools/heap-profiler.h"
 
 using namespace std;
 using namespace SeekRPC;
@@ -34,17 +35,17 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
             // Initialize the Pvalue struct
             bool res;
             CSeekCentral &speciesSC = this->speciesSeekCentrals[speciesName];
-            string pvalueDir = speciesSC.m_vecDBSetting[0]->pvalueDir;
-            pvalueEnabled = true;
+            string pvalueDir = speciesSC.roAttr->m_vecDBSetting[0]->pvalueDir;
             // Try loading the pvalue metadata arrays
             res = loadPvalueArrays(pvalueDir, this->speciesPvalueData[speciesName]);
             if (res == false) {
                 // Try creating the metadata from the raw random score outputs
                 res = initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
                 if (res == false) {
-                    // Disable pvalue queries
-                    cout << "WARNING: PValue queries disabled, unable to initialize" << endl;
-                    pvalueEnabled = false;
+                    // Disable pvalue queries for this species
+                    cerr << "WARNING: PValue queries disabled for (" << speciesName;
+                    cerr << "): unable to initialize data structures" << endl;
+                    this->speciesPvalueData.erase(speciesName);
                 }
             }
         } catch(exception &err) {
@@ -59,9 +60,11 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
 
 void SeekInterface::seekQuery(const SeekQueryArgs &query, SeekResult &result)
 {
+    // HeapProfilerStart("/tmp/heap");
     // spin off a thread to run this query but wait immediately for it
     int64_t taskId = this->seekQueryAsync(query);
     this->getSeekResult(taskId, true, result);
+    // HeapProfilerDump("seekQuery");
     return;
 }
 
@@ -102,12 +105,13 @@ void SeekInterface::pvalueGenes(const PValueGeneArgs& query, PValueResult& resul
     // TaskInfoPtrS task = make_shared<TaskInfo>();
     // task->queryType = QueryType::Pvalue;
     // task->pvalueGeneQuery = query;
-    if (this->pvalueEnabled == true) {
+    if (this->speciesPvalueData.count(query.species) > 0) {
         pvalueGenesCommon(query, result);
     } else {
         result.success = false;
         result.status = QueryStatus::Error;
-        result.statusMsg = "Pvalue server not initialized properly, check pvalue directory";
+        result.statusMsg = "Pvalue data not initialized properly for species (" + 
+            query.species + "), check pvalue directory";
         result.__isset.status = true;
         result.__isset.statusMsg = true;
     }
@@ -235,6 +239,7 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
     }
 
     // Create the output directory if needed
+    // TODO - check if directory exists first
     filesystem::create_directory(query.outputDir);
 
     vector<string> queryGenes(query.genes);
@@ -295,7 +300,7 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
         gsl_rng_env_setup();
         T = gsl_rng_default;
         rnd = gsl_rng_alloc(T);
-        gsl_rng_set(rnd, 100);
+        gsl_rng_set(rnd, 0);
         utype FOLD = 5;
         //enum PartitionMode PART_M = CUSTOM_PARTITION;
         enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
@@ -582,6 +587,12 @@ int SeekInterface::removeMappedTask(int64_t taskId) {
     uint32_t numRemoved = this->taskMap.erase(taskId);
     assert(numRemoved == 0 || numRemoved == 1);
     return numRemoved;
+}
+
+int SeekInterface::numTasksOutstanding() {
+    shared_lock mlock(this->taskMapMutex);
+    int numTasks = this->taskMap.size();
+    return numTasks;
 }
 
 /* This cleaner thread handles cases where the client never calls get_result.

@@ -16,6 +16,7 @@ typedef struct {
   char *inputDirList;
   char *dbFile;
   char *combinedDir;
+  bool verbose = false;
 } Args;
 
 bool parseArgs(int argc, char **argv, Args &args)
@@ -27,6 +28,7 @@ bool parseArgs(int argc, char **argv, Args &args)
       {"inputDirList",  required_argument, 0,  'i' },
       {"combinedDir",   required_argument, 0,  'c' },
       {"dbFile",        required_argument, 0,  'f' },
+      {"verbose",       no_argument,       0,  'v'},
       {0,               0,                 0,  0   }
   };
   int opt = 0;
@@ -45,6 +47,9 @@ bool parseArgs(int argc, char **argv, Args &args)
       break;
     case 'f':
       args.dbFile = optarg;
+      break;
+    case 'v':
+      args.verbose = true;
       break;
     default:
       cout << "Error: unrecognized options" << endl;
@@ -69,7 +74,7 @@ int main(int argc, char** argv)
     exit(-1);
   }
   // input is 3 dblet names, orig1, orig2 and combined
-  cout << args.inputDirList << " " << args.dbFile << " " << args.combinedDir << endl;
+  cout << "VerifyMergedDBFiles: " << args.inputDirList << " " << args.dbFile << " " << args.combinedDir << endl;
 
   // read in list of input dirs
   vector<string> inputDirs;
@@ -139,7 +144,9 @@ int main(int argc, char** argv)
   size_t numValidData = 0;
   for (int i = 0; i < numDbletGenes; i++) {
     // For each gene stored in the db file
-    printf("Compare data for gene %d:  \n", i);
+    if (args.verbose) {
+      printf("Compare data for gene %d:  \n", i);
+    }
     for (int j = 0; j < iGenes; j++) {
       // for each of the dataset wide genes
       dataCombined.clear();
@@ -167,7 +174,9 @@ int main(int argc, char** argv)
         dset_offset += numDatasets;
       }
     }
-    printf("numValidData: %zu\n", numValidData);
+    if (args.verbose) {
+      printf("numValidData: %zu\n", numValidData);
+    }
   }
   if (numValidData == 0) {
     throw runtime_error("All data is NA: " + string(args.dbFile));

@@ -111,7 +111,7 @@ void printPlatformStats(string name, Sleipnir::SeekPlatforms &seekPlatforms)
   uint32_t numPlatforms = seekPlatforms.getNumPlatforms();
   uint32_t numGenes = seekPlatforms.getNumGenes();
   vector<string> &platNames = seekPlatforms.getPlatformNames();
-  vector<Sleipnir::CSeekPlatform> &platVec = seekPlatforms.getCSeekPlatforms();
+  const vector<Sleipnir::CSeekPlatform> &platVec = seekPlatforms.getCSeekPlatforms();
   cout << "PlATFORM STATS: " << name << endl;
   for (int platIdx = 0; platIdx < numPlatforms; platIdx++)
   {
@@ -139,17 +139,17 @@ void compareSeekPlatforms(Sleipnir::SeekPlatforms &seekPlatformsA, Sleipnir::See
   }
 
   // loop through and compare the platform order map
-  map<string, utype> &platMapA = seekPlatformsA.getPlatformMap();
-  map<string, utype> &platMapB = seekPlatformsB.getPlatformMap();
+  const map<string, utype> &platMapA = seekPlatformsA.getPlatformMap();
+  const map<string, utype> &platMapB = seekPlatformsB.getPlatformMap();
   for (int platIdx = 0; platIdx < numPlatforms; platIdx++)
   {
     string name = platNamesA[platIdx];
-    ASSERT_EQ(platMapA[name], platMapB[name]);
+    ASSERT_EQ(platMapA.at(name), platMapB.at(name));
   }
 
   // loop through and compare values between platforms 1 and 2
-  vector<Sleipnir::CSeekPlatform> &platVecA = seekPlatformsA.getCSeekPlatforms();
-  vector<Sleipnir::CSeekPlatform> &platVecB = seekPlatformsB.getCSeekPlatforms();
+  const vector<Sleipnir::CSeekPlatform> &platVecA = seekPlatformsA.getCSeekPlatforms();
+  const vector<Sleipnir::CSeekPlatform> &platVecB = seekPlatformsB.getCSeekPlatforms();
   for (int platIdx = 0; platIdx < numPlatforms; platIdx++)
   {
     // cout << "COMPARE platform " << platIdx << ", " << platNamesA[platIdx] << endl;

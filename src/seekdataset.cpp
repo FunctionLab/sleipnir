@@ -608,11 +608,11 @@ namespace Sleipnir {
         return sum_weight;
     }
 
-    void CSeekDataset::SetPlatform(CSeekPlatform &cp) {
+    void CSeekDataset::SetPlatform(const CSeekPlatform &cp) {
         platform = &cp;
     }
 
-    CSeekPlatform &CSeekDataset::GetPlatform() const {
+    const CSeekPlatform &CSeekDataset::GetPlatform() const {
         return *platform;
     }
 

@@ -141,5 +141,6 @@ service SeekRPC {
     PValueResult pvalueGenes(1: PValueGeneArgs query);
     PValueResult pvalueDatasets(1: PValueDatasetArgs query);
     double getRpcVersion();
+    i32 numTasksOutstanding();
     i32 ping();  // returns monotonic increasing int
 }

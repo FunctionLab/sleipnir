@@ -130,7 +130,7 @@ void *do_query(void *th_arg) {
             gsl_rng_env_setup();
             T = gsl_rng_default;
             rnd = gsl_rng_alloc(T);
-            gsl_rng_set(rnd, 100);
+            gsl_rng_set(rnd, 0);
             utype FOLD = 5;
             //enum PartitionMode PART_M = CUSTOM_PARTITION;
             enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
