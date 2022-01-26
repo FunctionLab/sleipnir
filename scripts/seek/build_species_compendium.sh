@@ -1,31 +1,42 @@
-#! /bin/bash
+#!/bin/bash
 
 ########
 ### Script to run the various steps to build a species Seek compendium
+#
+# Edit the first 5 lines below for the species name, NCBI location and
+#   base diretory information
+#
+# Typical species built:
+#   yeast : saccharomyces_cerevisiae
+#   mouse : mus_musculus
+#   worm : caenorhabditis_elegans
+#   fly : drosophila_melanogaster
+#   zebrafish : danio_rerio
 ########
-
 
 SPECIES_NAME='saccharomyces_cerevisiae'
 SHORT_NAME='yeast'
 NCBI_GENE_INFO='https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Fungi/Saccharomyces_cerevisiae.gene_info.gz'
+OUTPUT_BASE_DIR='/data/seek/tmp'
+OUTPUT_DIR="${OUTPUT_BASE_DIR}/${SHORT_NAME}"
 
 NEW_PCL_DATA='/Genomics/function/pentacon/akwong/projects/modSeek_rpc/refine_bio_nonhuman/'
-SCRIPTS_DIR='~/src/github/FunctionLab/sleipnir/scripts/seek'
-SEEK_BIN='~/src/github/FunctionLab/sleipnir/Debug'
+SCRIPTS_DIR=$(realpath ~/src/github/FunctionLab/sleipnir/scripts/seek)
+SEEK_BIN=$(realpath ~/src/github/FunctionLab/sleipnir/Debug)
 
 # Activate conda environment
-source ~/.bashrc
 if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
+  source ~/.bashrc
   conda activate genomics
 fi
 
 # 1. make the species dir
-if [ -d ${SHORT_NAME} ]; then
-    echo "Error: species directory '${SHORT_NAME}' already exists!"
+if [ -d ${OUTPUT_DIR} ]; then
+    echo "Error: species directory '${OUTPUT_DIR}' already exists!"
     exit -1
 fi
-mkdir ${SHORT_NAME}
-cd ${SHORT_NAME}
+mkdir ${OUTPUT_DIR}
+cd ${OUTPUT_DIR}
 cp ../quant2 .
 
 # 2. Get the gene info
@@ -72,4 +83,4 @@ awk 'BEGIN { FS = "[ \t]+" }; FNR==NR {a[$1]=toupper($0); next}; $2 in a {print 
 
 # 7. Build the species compendium
 time python ${SCRIPTS_DIR}/seekCreateDB.py --all --dab-use-gene-set \
-    -b ${SEEK_BIN} -i ./ -o ./ -p ./pcl -m 30 |& tee out.txt
+    -b ${SEEK_BIN} -i ./ -o ./ -p ./pcl -m 30 2>&1 | tee out.txt
