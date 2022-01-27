@@ -59,7 +59,9 @@ def loadConfig(configFilename):
     for k, v in DB1.items():
         newKey = to_camel_case(k)
         cfg[newKey] = v
+    # Translate for a couple of legacy 'DB' names to new config names
     cfg.numDbFiles = cfg.numberOfDb
+    cfg.datasetPlatMapFile = cfg.dsetMapFile
     return cfg
 
 def checkConfig(cfg):
