@@ -136,6 +136,9 @@ def readDatasetList(dsetFile):
     dset_list = []
     for line in fp:
         count += 1
+        # check if line has spaces in it
+        if " " in line:
+            raise ValueError(f"seekUtils: readDatasetList: line({count}): spaces dectected in line")
         cols = line.rstrip("\n").split("\t")
         # expecting first column like 'dataset.platform.pcl'
         parts = cols[0].split(".")
@@ -389,8 +392,8 @@ def gvarCreate(cfg, concurrency=8):
 
 def makePlatFiles(cfg, concurrency=8):
     """
-    Calculate platform-wide gene average and stddev - not parallelized
-    TODO - this could be parallelized if SeekPrep combineplat is updated to take a list of input dirs
+    Calculate platform-wide gene average and stddev
+    This is parallelized within SeekPrep using OpenMP (omp)
     Requires:
         - DB files already made
         - gene prep files already made
