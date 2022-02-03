@@ -691,8 +691,9 @@ int main(int iArgs, char **aszArgs) {
 
             //printf("Size: %d %d\n", numPlatforms, m_iGenes); getchar();
 
-            // omp_set_num_threads(1);
-            int numThreads = omp_get_max_threads();
+            // int numThreads = omp_get_max_threads();
+            int numThreads = 8;
+            omp_set_num_threads(numThreads);
 
             /*if(iDatasets<numThreads){
                 numThreads = iDatasets;
@@ -705,6 +706,9 @@ int main(int iArgs, char **aszArgs) {
             }
             cout << "Calc Platform Stats: Num threads: " << numThreads << endl;
 
+            time_t startTime, endTime;
+            startTime = time(nullptr);
+
             string strPrepInputDirectory = sArgs.dir_prep_in_arg;
             auto *vc = new vector<CSeekDataset *>[numThreads];
             auto *platform_avg_threads =
@@ -714,14 +718,20 @@ int main(int iArgs, char **aszArgs) {
             CFullMatrix<uint32_t> *platform_count_threads =
                 new CFullMatrix<uint32_t>[numThreads];
 
+            // Initialize per-thread data
+#pragma omp parallel for \
+            shared(iDatasets, vecstrDatasets, strPrepInputDirectory, vc, numThreads, \
+            platform_avg_threads, platform_stdev_threads, platform_count_threads, \
+            numPlatforms, m_iGenes) \
+            private(i) schedule(dynamic)
             for (i = 0; i < numThreads; i++) {
                 InitializeDataset(iDatasets, vecstrDatasets,
                                   strPrepInputDirectory, vc[i]);
                 platform_avg_threads[i].Initialize(numPlatforms, m_iGenes);
                 platform_stdev_threads[i].Initialize(numPlatforms, m_iGenes);
                 platform_count_threads[i].Initialize(numPlatforms, m_iGenes);
-                for (j = 0; j < numPlatforms; j++) {
-                    for (k = 0; k < m_iGenes; k++) {
+                for (int j = 0; j < numPlatforms; j++) {
+                    for (int k = 0; k < m_iGenes; k++) {
                         platform_avg_threads[i].Set(j, k, CMeta::GetNaN());
                         platform_stdev_threads[i].Set(j, k, CMeta::GetNaN());
                         platform_count_threads[i].Set(j, k, 0);
@@ -731,9 +741,14 @@ int main(int iArgs, char **aszArgs) {
                 }
             }
 
+            endTime = time(nullptr);
+            printf("init time %ld sec\n", endTime - startTime);
+            startTime = time(nullptr);
+
             //printf("Dataset initialized"); getchar();
             vector <string> localVectrQuery;
 
+            // Open the db files and accumulate statistics per thread for those file
 #pragma omp parallel for \
 			shared(vc, dblist, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
 			platform_avg_threads, platform_stdev_threads, localVectrQuery, logit) \
@@ -751,13 +766,23 @@ int main(int iArgs, char **aszArgs) {
                         DBFile.c_str());
             }
 
-            // combine the threads avg and stdev together
+            endTime = time(nullptr);
+            printf("thread calc time %ld sec\n", endTime - startTime);
+            startTime = time(nullptr);
+
+            // combine the per-thread avg and stdev stats together
+#pragma omp parallel for \
+            shared(platform_avg_threads, platform_stdev_threads, platform_count_threads, \
+            platforms, numPlatforms, m_iGenes) \
+            private(j) schedule(dynamic)
             for (j = 0; j < numPlatforms; j++) {
-                for (k = 0; k < m_iGenes; k++) {
+                int tid = omp_get_thread_num();
+                // printf("tid: %d, j: %d\n", tid, j);
+                for (int k = 0; k < m_iGenes; k++) {
                     uint32_t runningCount = 0;
                     double runningAvg = 0;
                     double runningVar = 0;
-                    for (i = 0; i < numThreads; i++) {
+                    for (int i = 0; i < numThreads; i++) {
                         float avg = platform_avg_threads[i].Get(j, k);
                         float stdev = platform_stdev_threads[i].Get(j, k);
                         uint32_t cnt = platform_count_threads[i].Get(j, k);
@@ -781,6 +806,9 @@ int main(int iArgs, char **aszArgs) {
                     }
                 }
             }
+
+            endTime = time(nullptr);
+            printf("thread combine time %ld sec\n", endTime - startTime);
 
             /*
             for(i=0; i<numPlatforms; i++){
