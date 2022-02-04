@@ -783,14 +783,14 @@ int main(int iArgs, char **aszArgs) {
                     double runningAvg = 0;
                     double runningVar = 0;
                     for (int i = 0; i < numThreads; i++) {
-                        float avg = platform_avg_threads[i].Get(j, k);
-                        float stdev = platform_stdev_threads[i].Get(j, k);
+                        double avg = platform_avg_threads[i].Get(j, k);
+                        double stdev = platform_stdev_threads[i].Get(j, k);
                         uint32_t cnt = platform_count_threads[i].Get(j, k);
                         if (avg == CMeta::GetNaN() || stdev == CMeta::GetNaN() || cnt == 0) {
                             continue;
                         }
                         double var = pow(stdev, 2);
-                        float newAvg = (runningAvg * runningCount + avg * cnt) / (runningCount + cnt);
+                        double newAvg = (runningAvg * runningCount + avg * cnt) / (runningCount + cnt);
                         double diffRunningAvg = runningAvg - newAvg;
                         double diffTAvg = avg - newAvg;
                         double newVar = (runningCount * (runningVar + pow(diffRunningAvg, 2)) +
