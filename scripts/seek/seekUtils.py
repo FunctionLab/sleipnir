@@ -422,10 +422,12 @@ def makePlatFiles(cfg, concurrency=8):
 
 def makeDsetSizeFile(cfg, concurrency=8):
     """Create dataset size file, which contains the number of samples per dataset
-    TODO - add parallelization
     """
-    # TODO - this could be parallelized if multiprocess returns a value for each task
-    #   have it return the dset size (in a result queue) and collect them all.
+    # This could be parallelized if change runParallelJobs to return a value for each task,
+    #   i.e. have it return the dset size (in a result queue) and collect them all.
+    # Or SeekPrep could be modified to optionally accept a list of pclbin files to
+    #   process and use omp to run them in parallel. However the run time on
+    #   human and mouse for all pclbin files is about 5 minutes, so it's low priority.
     cmdName = prepCmd('SeekPrep', 'makeDsetSizeFile', cfg)
     pclBinDir = os.path.join(cfg.outDir, 'pclbin')
     dsetSizeFile = os.path.join(cfg.outDir, 'dset_size.txt')

@@ -691,8 +691,10 @@ int main(int iArgs, char **aszArgs) {
 
             //printf("Size: %d %d\n", numPlatforms, m_iGenes); getchar();
 
-            // int numThreads = omp_get_max_threads();
-            int numThreads = 8;
+            int numThreads = omp_get_max_threads();
+            if (numThreads > 16) {
+                numThreads = 16;
+            }
             omp_set_num_threads(numThreads);
 
             /*if(iDatasets<numThreads){
