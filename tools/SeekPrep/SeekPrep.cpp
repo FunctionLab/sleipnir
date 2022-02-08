@@ -748,16 +748,16 @@ int main(int iArgs, char **aszArgs) {
             startTime = time(nullptr);
 
             //printf("Dataset initialized"); getchar();
-            vector <string> localVectrQuery;
 
             // Open the db files and accumulate statistics per thread for those file
 #pragma omp parallel for \
 			shared(vc, dblist, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
-			platform_avg_threads, platform_stdev_threads, localVectrQuery, logit) \
+			platform_avg_threads, platform_stdev_threads, logit) \
 			private(i) firstprivate(useNibble) schedule(dynamic)
             for (i = 0; i < dblist.size(); i++) {
                 int tid = omp_get_thread_num();
                 string DBFile = dblist[i];
+                vector <string> localVectrQuery;
                 fprintf(stderr, "opening db file %s\n", DBFile.c_str());
                 OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
                        vecstrGenes, mapiPlatform, quant, vc[tid],
