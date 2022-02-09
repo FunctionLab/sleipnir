@@ -18,6 +18,7 @@ sys.path.append(pytoolsDir)
 import seekUtils as sutils
 from pytestHelper import createSampleDatabase
 from rank_correlation import files_rank_correlation
+import compare_result_files as cmpResFiles
 
 min_result_correlation = 0.95
 
@@ -92,7 +93,14 @@ class TestSeekMiner:
         # See if 3.result.txt matches
         file1 = os.path.join(tmpDir, '3.results.txt')
         file2 = os.path.join(sampleBcDir, 'randTestInputs/3.results.txt')
-        assert filecmp.cmp(file1, file2, shallow=False)
+        filesMatch = filecmp.cmp(file1, file2, shallow=False)
+        if filesMatch:
+            pass
+        else:
+            # check if they are very close
+            pctDiff = cmpResFiles.get_pct_error(file1, file2, skiprows=1)
+            assert pctDiff < 1  # less than 1% difference
+        pass
 
     def test_buildSeekPrepStats(self):
         # Test the multi-threaded version of calculating the plat stats
