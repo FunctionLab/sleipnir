@@ -4,6 +4,7 @@ import sys
 import time
 import glob
 import filecmp
+import hashlib
 import tempfile
 import subprocess
 
@@ -92,3 +93,41 @@ class TestSeekMiner:
         file1 = os.path.join(tmpDir, '3.results.txt')
         file2 = os.path.join(sampleBcDir, 'randTestInputs/3.results.txt')
         assert filecmp.cmp(file1, file2, shallow=False)
+
+    def test_buildSeekPrepStats(self):
+        # Test the multi-threaded version of calculating the plat stats
+        sampleBcDir = TestSeekMiner.sampleBcDir
+        cfg = TestSeekMiner.cfg
+        # make tmp dir for plat stats results
+        tmpDirObj = tempfile.TemporaryDirectory()
+        tmpDir = tmpDirObj.name
+        tmpPlatDir = os.path.join(tmpDir,  'plat')
+        os.makedirs(tmpPlatDir)
+        # make list of db files
+        dbList = glob.glob(os.path.join(sampleBcDir, 'db', '*.db'))
+        dbListFile = os.path.join(tmpDir, 'dblist.txt')
+        with open(dbListFile, 'w') as fp:
+            fp.write(os.linesep.join(dbList))
+
+        # run command
+        cmd = f'{sleipnirBin}/SeekPrep -i {cfg.geneMapFile} -Q {cfg.quantFile} ' \
+              f'-A {cfg.datasetPlatMapFile} -I {cfg.prepDir} -b {dbListFile} ' \
+              f'-D {tmpPlatDir} -f -P'
+        print(f'### {cmd}')
+        ret = subprocess.run(cmd, shell=True)
+        assert ret.returncode == 0
+
+        # check against expected md5sums
+        md5Expected = {
+            "all_platforms.gplatavg" : "4cbd7c548934ef02d74f3f54906dc010",
+            "all_platforms.gplatcount" : "deb0c431dd924497efb33c0bb610a9ed",
+            "all_platforms.gplatorder" : "c20abb609c9de9c469e341bee3a182ad",
+            "all_platforms.gplatstdev" : "87f50ee50fdadbec22d07c1600226661",
+        }
+        for fileName in md5Expected.keys():
+            filePath = os.path.join(tmpPlatDir, fileName)
+            with open(filePath, 'rb') as fp:
+                data = fp.read()
+            md5Result = hashlib.md5(data).hexdigest()
+            assert md5Result == md5Expected[fileName]
+        pass
