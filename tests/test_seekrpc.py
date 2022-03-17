@@ -33,7 +33,7 @@ from seek_rpc.ttypes import SearchMethod, DistanceMeasure
 use_tempfile = False
 min_result_correlation = 0.95
 testPort = 9123
-taskTimeOut = 5
+taskTimeOut = 10
 
 class TestSeekRPC:
     cfgFile = None

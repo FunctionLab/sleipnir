@@ -29,7 +29,7 @@ sys.path.append(currPath)
 import seekUtils as sutils
 from structDict import StructDict
 
-# TODO - command line args: --all --sinfo --gvar --prep --plat --db --dab --dsetsize --pclbin
+# task command line args: --all --sinfo --gvar --prep --plat --db --dab --dsetsize --pclbin
 
 def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     sutils.checkConfig(cfg)

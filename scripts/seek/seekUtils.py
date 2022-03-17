@@ -136,6 +136,9 @@ def readDatasetList(dsetFile):
     dset_list = []
     for line in fp:
         count += 1
+        # check if line has spaces in it
+        if " " in line:
+            raise ValueError(f"seekUtils: readDatasetList: line({count}): spaces dectected in line")
         cols = line.rstrip("\n").split("\t")
         # expecting first column like 'dataset.platform.pcl'
         parts = cols[0].split(".")
@@ -389,8 +392,8 @@ def gvarCreate(cfg, concurrency=8):
 
 def makePlatFiles(cfg, concurrency=8):
     """
-    Calculate platform-wide gene average and stddev - not parallelized
-    TODO - this could be parallelized if SeekPrep combineplat is updated to take a list of input dirs
+    Calculate platform-wide gene average and stddev
+    This is parallelized within SeekPrep using OpenMP (omp)
     Requires:
         - DB files already made
         - gene prep files already made
@@ -419,10 +422,12 @@ def makePlatFiles(cfg, concurrency=8):
 
 def makeDsetSizeFile(cfg, concurrency=8):
     """Create dataset size file, which contains the number of samples per dataset
-    TODO - add parallelization
     """
-    # TODO - this could be parallelized if multiprocess returns a value for each task
-    #   have it return the dset size (in a result queue) and collect them all.
+    # This could be parallelized if change runParallelJobs to return a value for each task,
+    #   i.e. have it return the dset size (in a result queue) and collect them all.
+    # Or SeekPrep could be modified to optionally accept a list of pclbin files to
+    #   process and use omp to run them in parallel. However the run time on
+    #   human and mouse for all pclbin files is about 5 minutes, so it's low priority.
     cmdName = prepCmd('SeekPrep', 'makeDsetSizeFile', cfg)
     pclBinDir = os.path.join(cfg.outDir, 'pclbin')
     dsetSizeFile = os.path.join(cfg.outDir, 'dset_size.txt')

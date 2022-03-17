@@ -362,7 +362,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
             mean[k] = sum[k] / (float) num[k];
             stdev[k] = sq_sum[k] / (float) num[k] - mean[k] * mean[k];
             stdev[k] = sqrt(stdev[k]);
-            fprintf(stderr, "%s G%zu P%zu %.5f %.5f\n", thisGene.c_str(), geneID, k, mean[k], stdev[k]);
+            // fprintf(stderr, "%s G%zu P%zu %.5f %.5f\n", thisGene.c_str(), geneID, k, mean[k], stdev[k]);
             platform_avg.Set(k, geneID, mean[k]);
             platform_stdev.Set(k, geneID, stdev[k]);
             platform_count.Set(k, geneID, num[k]);
@@ -456,9 +456,6 @@ int main(int iArgs, char **aszArgs) {
     }
 
     if (sArgs.input_arg) ifsm.close();
-
-    omp_set_num_threads(1);
-    int numThreads = omp_get_max_threads();
 
     if ((sArgs.dab_flag == 1 && sArgs.norm_flag == 1) ||
         sArgs.dabset_flag == 1) {
@@ -694,10 +691,25 @@ int main(int iArgs, char **aszArgs) {
 
             //printf("Size: %d %d\n", numPlatforms, m_iGenes); getchar();
 
+            int numThreads = omp_get_max_threads();
+            if (numThreads > 16) {
+                numThreads = 16;
+            }
+            omp_set_num_threads(numThreads);
+
             /*if(iDatasets<numThreads){
                 numThreads = iDatasets;
                 omp_set_num_threads(numThreads);
             }*/
+
+            if (dblist.size() < numThreads) {
+                numThreads = dblist.size();
+                omp_set_num_threads(numThreads);
+            }
+            cout << "Calc Platform Stats: Num threads: " << numThreads << endl;
+
+            time_t startTime, endTime;
+            startTime = time(nullptr);
 
             string strPrepInputDirectory = sArgs.dir_prep_in_arg;
             auto *vc = new vector<CSeekDataset *>[numThreads];
@@ -708,14 +720,20 @@ int main(int iArgs, char **aszArgs) {
             CFullMatrix<uint32_t> *platform_count_threads =
                 new CFullMatrix<uint32_t>[numThreads];
 
+            // Initialize per-thread data
+#pragma omp parallel for \
+            shared(iDatasets, vecstrDatasets, strPrepInputDirectory, vc, numThreads, \
+            platform_avg_threads, platform_stdev_threads, platform_count_threads, \
+            numPlatforms, m_iGenes) \
+            private(i) schedule(dynamic)
             for (i = 0; i < numThreads; i++) {
                 InitializeDataset(iDatasets, vecstrDatasets,
                                   strPrepInputDirectory, vc[i]);
                 platform_avg_threads[i].Initialize(numPlatforms, m_iGenes);
                 platform_stdev_threads[i].Initialize(numPlatforms, m_iGenes);
                 platform_count_threads[i].Initialize(numPlatforms, m_iGenes);
-                for (j = 0; j < numPlatforms; j++) {
-                    for (k = 0; k < m_iGenes; k++) {
+                for (int j = 0; j < numPlatforms; j++) {
+                    for (int k = 0; k < m_iGenes; k++) {
                         platform_avg_threads[i].Set(j, k, CMeta::GetNaN());
                         platform_stdev_threads[i].Set(j, k, CMeta::GetNaN());
                         platform_count_threads[i].Set(j, k, 0);
@@ -725,16 +743,21 @@ int main(int iArgs, char **aszArgs) {
                 }
             }
 
-            //printf("Dataset initialized"); getchar();
-            vector <string> localVectrQuery;
+            endTime = time(nullptr);
+            printf("init time %ld sec\n", endTime - startTime);
+            startTime = time(nullptr);
 
-            //#pragma omp parallel for \
+            //printf("Dataset initialized"); getchar();
+
+            // Open the db files and accumulate statistics per thread for those file
+#pragma omp parallel for \
 			shared(vc, dblist, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
-			platform_avg_threads, platform_stdev_threads, localVectrQuery, logit) \
+			platform_avg_threads, platform_stdev_threads, logit) \
 			private(i) firstprivate(useNibble) schedule(dynamic)
             for (i = 0; i < dblist.size(); i++) {
                 int tid = omp_get_thread_num();
                 string DBFile = dblist[i];
+                vector <string> localVectrQuery;
                 fprintf(stderr, "opening db file %s\n", DBFile.c_str());
                 OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
                        vecstrGenes, mapiPlatform, quant, vc[tid],
@@ -745,21 +768,49 @@ int main(int iArgs, char **aszArgs) {
                         DBFile.c_str());
             }
 
-            for (i = 0; i < numThreads; i++) {
-                for (j = 0; j < numPlatforms; j++) {
-                    for (k = 0; k < m_iGenes; k++) {
-                        float ca = platform_avg_threads[i].Get(j, k);
-                        float cs = platform_stdev_threads[i].Get(j, k);
-                        uint32_t cn = platform_count_threads[i].Get(j, k);
-                        if (ca == CMeta::GetNaN() || cs == CMeta::GetNaN()) {
+            endTime = time(nullptr);
+            printf("thread calc time %ld sec\n", endTime - startTime);
+            startTime = time(nullptr);
+
+            // combine the per-thread avg and stdev stats together
+#pragma omp parallel for \
+            shared(platform_avg_threads, platform_stdev_threads, platform_count_threads, \
+            platforms, numPlatforms, m_iGenes) \
+            private(j) schedule(dynamic)
+            for (j = 0; j < numPlatforms; j++) {
+                int tid = omp_get_thread_num();
+                // printf("tid: %d, j: %d\n", tid, j);
+                for (int k = 0; k < m_iGenes; k++) {
+                    uint32_t runningCount = 0;
+                    double runningAvg = 0;
+                    double runningVar = 0;
+                    for (int i = 0; i < numThreads; i++) {
+                        double avg = platform_avg_threads[i].Get(j, k);
+                        double stdev = platform_stdev_threads[i].Get(j, k);
+                        uint32_t cnt = platform_count_threads[i].Get(j, k);
+                        if (avg == CMeta::GetNaN() || stdev == CMeta::GetNaN() || cnt == 0) {
                             continue;
                         }
-                        platforms.platformAvgMatrix.Set(j, k, ca);
-                        platforms.platformStdevMatrix.Set(j, k, cs);
-                        platforms.platformCountMatrix.Set(j, k, cn);
+                        double var = pow(stdev, 2);
+                        double newAvg = (runningAvg * runningCount + avg * cnt) / (runningCount + cnt);
+                        double diffRunningAvg = runningAvg - newAvg;
+                        double diffTAvg = avg - newAvg;
+                        double newVar = (runningCount * (runningVar + pow(diffRunningAvg, 2)) +
+                                         cnt * (var + pow(diffTAvg, 2))) / (runningCount + cnt);
+                        runningCount += cnt;
+                        runningAvg = newAvg;
+                        runningVar = newVar;
+                    }
+                    if (runningCount > 0) {
+                        platforms.platformAvgMatrix.Set(j, k, runningAvg);
+                        platforms.platformStdevMatrix.Set(j, k, sqrt(runningVar));
+                        platforms.platformCountMatrix.Set(j, k, runningCount);
                     }
                 }
             }
+
+            endTime = time(nullptr);
+            printf("thread combine time %ld sec\n", endTime - startTime);
 
             /*
             for(i=0; i<numPlatforms; i++){
