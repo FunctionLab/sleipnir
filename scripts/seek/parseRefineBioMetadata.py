@@ -2,6 +2,7 @@ import os
 import re
 import json
 import argparse
+from collections import Counter
 from mapDsetToPlatform import getE_Platform
 
 def perSpeciesDsetList(data, outdir):
@@ -34,19 +35,33 @@ def getPlatformFromSamples(dsetName, item):
     if samples is not None and len(samples) > 0:
         platformNameList = []
         platformIdList = []
-        for key, val in samples.items():
-            platName = val.get('platform_name')
-            platId = val.get('platform_id')
-            if platName is not None:
-                platformNameList.append(platName)
-            if platId is not None:
-                platformIdList.append(platId)
+        if type(samples) is list:
+            for sample in samples:
+                platName = sample.get('platform_name')
+                platId = sample.get('platform_id')
+                if platName is not None:
+                    platformNameList.append(platName)
+                if platId is not None:
+                    platformIdList.append(platId)
+        elif type(samples) is dict:
+            for key, val in samples.items():
+                platName = val.get('platform_name')
+                platId = val.get('platform_id')
+                if platName is not None:
+                    platformNameList.append(platName)
+                if platId is not None:
+                    platformIdList.append(platId)
+        else:
+            print(f"Samples section not of supported type, {type(samples)}")
+            return None
         numPlatformNames = len(set(platformNameList)) # consolidate identical items
         numPlatformIds = len(set(platformIdList)) # consolidate identical items
         if numPlatformIds == 1:
             # check there are no spaces in the platformId
             if bool(re.search(r"\s", platformIdList[0])) is False:
                 return platformIdList[0]
+            else:
+                print(f"Space found in platformId {platformIdList[0]}")
         if numPlatformNames == 1:
             return getE_Platform(platformNameList[0])
         if numPlatformNames > 1 or numPlatformIds > 1:
@@ -61,9 +76,16 @@ def getPlatformFromSamples(dsetName, item):
 
 
 def dsetPlatformMap(data, outdir, matchSpecies=None):
+    speciesCounter = Counter()
+    if matchSpecies:
+        matchSpecies = matchSpecies.upper()
     with open(os.path.join(outdir, 'dset_map.txt'), 'w') as fp:
         for key, val in data.items():
-            if matchSpecies and matchSpecies not in val['organism_names']:
+            organisms = None
+            if val['organism_names'] is not None:
+                organisms = [species.upper() for species in val['organism_names']]
+            speciesCounter.update(organisms)
+            if matchSpecies and matchSpecies not in organisms:
                 continue
             platformId = None
             # First try the platform_id list
@@ -92,6 +114,9 @@ def dsetPlatformMap(data, outdir, matchSpecies=None):
                 continue
             line = f"{key}\t{key}.{platformId}.pcl\t{key}.{platformId}\t{platformId}"
             fp.write(line + os.linesep)
+    print(f"Species counts in file: {dict(speciesCounter)}")
+    totalCount = sum(speciesCounter.values())
+    print(f"Total dataset count: {totalCount}")
 
 
 if __name__ == "__main__":

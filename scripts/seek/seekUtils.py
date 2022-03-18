@@ -416,7 +416,9 @@ def makePlatFiles(cfg, concurrency=8):
         fp.write(os.linesep.join(dbList))
     cmd = f"{cmdName} -i {cfg.geneMapFile} -D {platDir} -f -P -b {dbListFile} -I {prepDir} " \
           f"-A {cfg.datasetPlatMapFile} -Q {cfg.quantFile}"
+    startTime = time.time()
     os.system(cmd)
+    print('makePlatFiles: completion time {}s'.format(time.time() - startTime))
     os.remove(dbListFile)
 
 

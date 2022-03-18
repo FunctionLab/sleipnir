@@ -9,7 +9,7 @@ SeekRPC = importlib.import_module('gen-py.seek_rpc.SeekRPC')
 ttypes = importlib.import_module('gen-py.seek_rpc.ttypes')
 constants = importlib.import_module('gen-py.seek_rpc.constants')
 
-host = 'localhost'
+#host = 'glacius'
 
 '''
 Query parameters and options:
@@ -37,7 +37,7 @@ struct SeekQueryArgs {
 '''
 
 def runQuery(args):
-    socket = TSocket.TSocket(host, args.port)
+    socket = TSocket.TSocket(args.host, args.port)
     transport = TTransport.TBufferedTransport(socket)
     protocol = TBinaryProtocol(transport)
     client = SeekRPC.Client(protocol)
@@ -95,6 +95,8 @@ if __name__ == "__main__":
                            help='list of genes to query')
     argParser.add_argument('--useSymbols', '-S', default=False, action='store_true',
                            help='genes specified by symbol name')
+    argParser.add_argument('--host', default="localhost", type=str,
+                           help='server port')
     argParser.add_argument('--port', '-p', default=9090, type=int,
                            help='server port')
     args = argParser.parse_args()
