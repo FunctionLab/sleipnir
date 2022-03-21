@@ -3,6 +3,11 @@
 ########
 ### Script to run the various steps to build a species Seek compendium
 #
+# Required inputs: pcl files, quant2 file refine_bio_metadata.json file
+#
+# Additionally, the refinebio_platforms will be downloaded from
+# https://api.refine.bio/v1/platforms/
+#
 # Edit the first 5 lines below for the species name, NCBI location and
 #   base diretory information
 #
@@ -37,6 +42,23 @@ if [ -d ${OUTPUT_DIR} ]; then
 fi
 mkdir ${OUTPUT_DIR}
 cd ${OUTPUT_DIR}
+
+# check if required files exist
+if [ ! -f ../refine_bio_meta.json ]; then
+    echo "Expecting file refine_bio_meta.json "
+    echo  "in output base directory ${OUTPUT_BASE_DIR}"
+    exit -1
+fi
+if [ ! -f ../quant2 ]; then
+    echo "Expecting file quant2 "
+    echo  "in output base directory ${OUTPUT_BASE_DIR}"
+    exit -1
+fi
+if [ ! -f ../refine_bio_platforms.json ]; then
+    # Download the platform metadata from https://api.refine.bio/v1/platforms/
+    wget https://api.refine.bio/v1/platforms/ -O ../refine_bio_platforms.json
+fi
+
 cp ../quant2 .
 
 # 2. Get the gene info
@@ -53,7 +75,8 @@ grep -e protein-coding -e rRNA gene_types_map.txt | cut -f 1 > coding_gene_list.
 # 3. Parse refine_bio info and make the dsetPlatMap file
 # Note: first command below outputs file dset_map.txt
 python ${SCRIPTS_DIR}/parseRefineBioMetadata.py  \
-    -f ../refine_bio_nonhuman_meta.json \
+    -f ../refine_bio_meta.json \
+    -p ../refine_bio_platforms.json \
     -s ${SPECIES_NAME} \
     --make-dset-map -o .
 cut -f 3,4 dset_map.txt > dsetPlatMap.txt
