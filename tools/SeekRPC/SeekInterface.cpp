@@ -185,8 +185,8 @@ void SeekInterface::runQueryThread(TaskInfoPtrS task) {
          *  to true when the scope exits. This will allow other threads
          *  such as the cleanerThread to know the execution has completed.
          */
-        BoolFlag completionFlag(task->isComplete);
-        lock_guard<BoolFlag> flag_lock(completionFlag);
+        AtomicBoolFlag completionFlag(task->isComplete);
+        lock_guard<AtomicBoolFlag> flag_lock(completionFlag);
 
         try {
             /* Wait on semaphore if max queries already running,
@@ -194,6 +194,10 @@ void SeekInterface::runQueryThread(TaskInfoPtrS task) {
             *   resource when the scope exits.
             */
             lock_guard<Semaphore> sem_lock(this->querySemaphore);
+
+            /* update the start timestamp */
+            task->timestamp = time(0);
+
             /* Run the query */
             if (task->queryType == QueryType::Seek) {
                 this->seekQueryCommon(task->seekQuery, task->seekResult, task->messageLog);

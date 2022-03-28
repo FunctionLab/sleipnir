@@ -33,8 +33,8 @@ public:
     PValueResult pvalueResult;
     QueryType queryType;
     int64_t taskId;  // Apache Thrift doesn't have uint64 so use int64
-    bool isComplete = false;
-    time_t timestamp;
+    atomic<bool> isComplete = false;
+    atomic<time_t> timestamp;
     mutex taskMutex;
     ThreadSafeQueue<string> messageLog;
     unique_ptr<thread> _thread;

@@ -142,7 +142,7 @@ namespace Sleipnir {
         m_platformNames.resize(numPlatforms);
     }
 
-    void SeekPlatforms::copy(SeekPlatforms &srcPlatforms)
+    void SeekPlatforms::copy(const SeekPlatforms &srcPlatforms)
     {
         // copy numGenes, numPlatforms, bincludeCounts
         m_numPlatforms = srcPlatforms.getNumPlatforms();
@@ -150,7 +150,7 @@ namespace Sleipnir {
         m_includeCounts = srcPlatforms.bIncludesCounts();
 
         // copy name vector
-        vector<string> &srcNames = srcPlatforms.getPlatformNames();
+        const vector<string> &srcNames = srcPlatforms.getPlatformNames();
         m_platformNames.resize(srcNames.size());
         m_platformNames = srcNames;
         // alternate method would be: copy(srcNames.begin(), srcNames.end(), m_platformNames.begin());
@@ -319,7 +319,7 @@ namespace Sleipnir {
             assert(m_numGenes == seekPlatforms2.getNumGenes());
         }
 
-        vector<string> &namesPlatforms2 = seekPlatforms2.getPlatformNames();
+        const vector<string> &namesPlatforms2 = seekPlatforms2.getPlatformNames();
         map<string, utype> mapPlatforms2 = seekPlatforms2.getPlatformMap();
         uint32_t numPlatforms2 = seekPlatforms2.getNumPlatforms();
         assert(namesPlatforms2.size() == numPlatforms2);
@@ -331,7 +331,7 @@ namespace Sleipnir {
         vector<string> newPlatformNames;
         vector<string> mutualPlatformNames;
         for (int i=0; i < numPlatforms2; i++) {
-            string &platName = namesPlatforms2[i];
+            const string &platName = namesPlatforms2[i];
             if (m_mapPlatformNameToOrderID.find(platName) == m_mapPlatformNameToOrderID.end()) {
                 // platform name not found - this is a new platform
                 newPlatformNames.push_back(platName);
