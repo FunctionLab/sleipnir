@@ -9,8 +9,6 @@ SeekRPC = importlib.import_module('gen-py.seek_rpc.SeekRPC')
 ttypes = importlib.import_module('gen-py.seek_rpc.ttypes')
 constants = importlib.import_module('gen-py.seek_rpc.constants')
 
-#host = 'glacius'
-
 '''
 Query parameters and options:
 
