@@ -135,6 +135,15 @@ private:
     bool &_flag;
 };
 
+class AtomicBoolFlag {
+public:
+    AtomicBoolFlag(atomic<bool> &flag) : _flag(flag) {}
+    void lock() { this->_flag = false; }
+    void unlock() { this->_flag = true; }
+private:
+    atomic<bool> &_flag;
+};
+
 // Another BasicLockable class to keep track of a count of threads in a region
 class CounterFlag {
 public:

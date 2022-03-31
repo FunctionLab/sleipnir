@@ -110,7 +110,7 @@ void printPlatformStats(string name, Sleipnir::SeekPlatforms &seekPlatforms)
 {
   uint32_t numPlatforms = seekPlatforms.getNumPlatforms();
   uint32_t numGenes = seekPlatforms.getNumGenes();
-  vector<string> &platNames = seekPlatforms.getPlatformNames();
+  const vector<string> &platNames = seekPlatforms.getPlatformNames();
   const vector<Sleipnir::CSeekPlatform> &platVec = seekPlatforms.getCSeekPlatforms();
   cout << "PlATFORM STATS: " << name << endl;
   for (int platIdx = 0; platIdx < numPlatforms; platIdx++)
@@ -131,8 +131,8 @@ void compareSeekPlatforms(Sleipnir::SeekPlatforms &seekPlatformsA, Sleipnir::See
   // bool includesCounts = seekPlatformsA.bIncludesCounts();
 
   // loop through and compare the platform names
-  vector<string> &platNamesA = seekPlatformsA.getPlatformNames();
-  vector<string> &platNamesB = seekPlatformsB.getPlatformNames();
+  const vector<string> &platNamesA = seekPlatformsA.getPlatformNames();
+  const vector<string> &platNamesB = seekPlatformsB.getPlatformNames();
   for (int platIdx = 0; platIdx < numPlatforms; platIdx++)
   {
     ASSERT_EQ(platNamesA[platIdx], platNamesB[platIdx]);

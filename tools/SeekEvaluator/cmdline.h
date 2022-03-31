@@ -134,12 +134,12 @@ struct gengetopt_args_info {
     char *query_list_arg;    /**< @brief List of query gene set files.  */
     char *query_list_orig;    /**< @brief List of query gene set files original value given at command line.  */
     const char *query_list_help; /**< @brief List of query gene set files help description.  */
-    char *exclude_list_arg;    /**< @brief Exclude gene list.  */
-    char *exclude_list_orig;    /**< @brief Exclude gene list original value given at command line.  */
-    const char *exclude_list_help; /**< @brief Exclude gene list help description.  */
-    char *include_list_arg;    /**< @brief List of annotated genes.  */
-    char *include_list_orig;    /**< @brief List of annotated genes original value given at command line.  */
-    const char *include_list_help; /**< @brief List of annotated genes help description.  */
+    char *exclude_list_arg;    /**< @brief List of exclude gene files.  */
+    char *exclude_list_orig;    /**< @brief List of exclude gene files original value given at command line.  */
+    const char *exclude_list_help; /**< @brief List of exclude gene files help description.  */
+    char *include_list_arg;    /**< @brief List of annotated gene files.  */
+    char *include_list_orig;    /**< @brief List of annotated gene files original value given at command line.  */
+    const char *include_list_help; /**< @brief List of annotated gene files help description.  */
     char *dir_out_arg;    /**< @brief Output directory.  */
     char *dir_out_orig;    /**< @brief Output directory original value given at command line.  */
     const char *dir_out_help; /**< @brief Output directory help description.  */

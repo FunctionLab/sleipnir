@@ -109,7 +109,7 @@ class TestSeekRPC:
         genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
         datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
         queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
-        # Do an async query using isQueryComplete to test
+        # Run the sync query
         result = client.seekQuery(queryArgs)
         assert result.success is True
         assert len(result.geneScores) > 0
@@ -589,6 +589,7 @@ class TestSeekRPC:
         # Currently no async version of pvalue, so just use query and pcl for now
         # cmdTypes = ['query', 'pcl', 'pvalue']
         cmdTypes = ['query', 'pcl']
+        random.seed(10)
         cmds = random.choices(cmdTypes, k=numQueries)
         taskIds = []
         for idx, cmd in enumerate(cmds):
@@ -601,7 +602,9 @@ class TestSeekRPC:
                 task_id = client.seekQueryAsync(queryArgs)
                 taskIds.append(task_id)
             elif cmd == 'pcl':
-                datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl']
+                datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl',
+                            'GSE17907.GPL570.pcl', 'GSE22597.GPL96.pcl',
+                            'GSE23500.GPL6947.pcl', 'GSE24468.GPL570.pcl']
                 genes = random.sample(allGenes, 100)
                 settings = SeekRPC.PclSettings(outputGeneExpression=True, outputNormalized=True)
                 pclArgs = SeekRPC.PclQueryArgs( species='sampleBC', genes=genes, datasets=datasets, settings=settings)

@@ -166,7 +166,7 @@ namespace Sleipnir {
         SeekPlatforms(size_t numPlatforms, size_t numGenes);
         void initialize(size_t numPlatforms, size_t numGenes);
         void clear() { initialize(0, 0); }
-        void copy(SeekPlatforms &srcPlatform);
+        void copy(const SeekPlatforms &srcPlatform);
         void setCSeekPlatformData();
         void loadPlatformDataFromFiles(string platformDir);
         void savePlatformDataToFiles(string platformDir);
@@ -174,10 +174,10 @@ namespace Sleipnir {
         void setPlatformNameMap(map<string, utype> &mapstriPlatform) { m_mapPlatformNameToOrderID = mapstriPlatform; }
         const vector<CSeekPlatform> &getCSeekPlatforms() const { return m_cseek_platforms; }
         const map<string, utype> &getPlatformMap() const { return m_mapPlatformNameToOrderID; }
-        vector<string> &getPlatformNames() { return m_platformNames; }
-        uint32_t getNumPlatforms() { return m_numPlatforms; }
-        uint32_t getNumGenes() { return m_numGenes; }
-        bool bIncludesCounts() { return m_includeCounts; }
+        const vector<string> &getPlatformNames() const { return m_platformNames; }
+        uint32_t getNumPlatforms() const { return m_numPlatforms; }
+        uint32_t getNumGenes() const { return m_numGenes; }
+        bool bIncludesCounts() const { return m_includeCounts; }
         bool combineWithPlatform(SeekPlatforms &seekPlatforms2);
 
         // Public Member Variables

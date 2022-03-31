@@ -161,11 +161,12 @@ void *do_pcl_query(void *th_arg) {
     string anError;
 
 #pragma omp parallel for \
+    default(none) \
     private(i) \
     firstprivate(genes, queries, datasets, outputCoexpression, outputQueryCoexpression, outputNormalized, outputExpression, \
     outputQueryExpression, NaN) \
     shared(sizeD, datasetNames, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
-    cc, platformMap, seekPlatforms, hasError, anError) \
+    cc, platformMap, seekPlatforms, hasError, anError, RBP_P, dsetPcls) \
     schedule(dynamic)
     for (i = 0; i < datasets; i++) {
         // CPCL *pp = vc[i];
@@ -348,11 +349,10 @@ void *do_pcl_query(void *th_arg) {
             }
         }
 
-        fprintf(stderr, "allocating space %lu %d...\n", geneName.size(),
-                ps);
+        // fprintf(stderr, "allocating space %lu %d...\n", geneName.size(), ps);
         ff = new CFullMatrix<float>();
         ff->Initialize(genes, ps);
-        fprintf(stderr, "done allocating space.\n");
+        // fprintf(stderr, "done allocating space.\n");
 
         if (outputExpression) {
             for (k = 0; k < geneName.size(); k++) {
@@ -578,7 +578,7 @@ void *do_pcl_query(void *th_arg) {
                 rbp *= (1.0 - RBP_P);
 
                 rbp = rbp / totQuery * 1000;
-                fprintf(stderr, "%zu %.3e\n", i, rbp);
+                // fprintf(stderr, "%zu %.3e\n", i, rbp);
                 vqCoexpression[k] = rbp;
                 d_vecqCoexpression[i].push_back(rbp);
             }

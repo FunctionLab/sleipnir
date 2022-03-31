@@ -83,7 +83,7 @@ if __name__ == "__main__":
         print('Please set seek_env with the dataset file names')
         sys.exit(-1)
 
-    assert cfg.geneMap == os.path.join(dataDir, geneMapFile)
+    assert os.path.normpath(cfg.geneMap) == os.path.join(dataDir, geneMapFile)
 
     # The query files have the query strings to run (multiple queries per file
     #   one query per line), located in query path

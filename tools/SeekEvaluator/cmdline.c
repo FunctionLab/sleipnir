@@ -83,8 +83,8 @@ const char *gengetopt_args_info_help[] = {
         "  -S, --goldstd_list=filename  List of gold standard gene set files",
         "  -G, --gscore_list=filename   List of gene score files",
         "  -Q, --query_list=filename    List of query gene set files",
-        "  -X, --exclude_list=filename  Exclude gene list",
-        "  -Y, --include_list=filename  List of annotated genes",
+        "  -X, --exclude_list=filename  List of exclude gene files",
+        "  -Y, --include_list=filename  List of annotated gene files",
         "\nOutput:",
         "  -d, --dir_out=directory      Output directory",
         0

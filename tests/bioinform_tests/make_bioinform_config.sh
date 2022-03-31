@@ -49,7 +49,7 @@ if [ -z $GENE_MAP_FILE ]; then
   GENE_MAP_FILE="gene_map.txt"
 fi
 
-gene_map_full_path="$seek_path/$GENE_MAP_FILE"
+gene_map_full_path=$(realpath "$seek_path/$GENE_MAP_FILE")
 
 output_file=$output_dir/$test_name"_config.toml"
 
