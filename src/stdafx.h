@@ -146,43 +146,64 @@ namespace Sleipnir {
     };
 
     struct Category {
+        int priorityLevel = Priority::INFO;
 
         static void shutdown( ) { }
 
-        static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
+        void setPriority(int level) {
+            priorityLevel = level;
+        }
 
-            fprintf( stderr, "%ld ", time( nullptr ) );
-            fprintf( stderr, "%s", szTag );
+        static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
+            std::time_t now = time(nullptr);
+            std::tm * ptm = localtime(&now);
+            char time_str[64];
+            // Format: 	2001-08-23::14:55:02
+            std::strftime(time_str, 256, "%F::%T", ptm);
+            fprintf( stderr, "%s ", szTag );
+            fprintf( stderr, "%s ", time_str );
             fprintf( stderr, " : " );
             vfprintf( stderr, szFormat, valArgs );
             fprintf( stderr, "\n" ); }
 
         void error( const char* szFormat, ... ) const {
             va_list	valArgs;
-
+ 
             va_start( valArgs, szFormat );
             log4cpp( "ERROR", szFormat, valArgs ); }
 
         void info( const char* szFormat, ... ) const {
             va_list	valArgs;
+            if (priorityLevel < Priority::INFO) {
+                return;
+            }
 
             va_start( valArgs, szFormat );
             log4cpp( "INFO", szFormat, valArgs ); }
 
         void notice( const char* szFormat, ... ) const {
             va_list	valArgs;
+            if (priorityLevel < Priority::NOTICE) {
+                return;
+            }
 
             va_start( valArgs, szFormat );
             log4cpp( "NOTICE", szFormat, valArgs ); }
 
         void warn( const char* szFormat, ... ) const {
             va_list	valArgs;
+            if (priorityLevel < Priority::WARN) {
+                return;
+            }
 
             va_start( valArgs, szFormat );
             log4cpp( "WARN", szFormat, valArgs ); }
 
         void debug( const char* szFormat, ... ) const {
             va_list	valArgs;
+            if (priorityLevel < Priority::DEBUG) {
+                return;
+            }
 
             va_start( valArgs, szFormat );
             log4cpp( "DEBUG", szFormat, valArgs ); }
@@ -194,16 +215,25 @@ namespace Sleipnir {
             log4cpp( Priority::c_aszPriorityLevels[ ePriority ], szFormat, valArgs ); }
 
         bool isDebugEnabled( ) const {
-
-            return true; }
+            if (priorityLevel < Priority::DEBUG) {
+                return false;
+            }
+            return true;
+        }
 
         bool isInfoEnabled( ) const {
-
-            return true; }
+            if (priorityLevel < Priority::INFO) {
+                return false;
+            }
+            return true; 
+        }
 
         bool isNoticeEnabled( ) const {
-
-            return true; }
+            if (priorityLevel < Priority::NOTICE) {
+                return false;
+            }
+            return true; 
+        }
     };
 
 #endif // USE_LOG4CPP_STUB

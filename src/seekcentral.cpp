@@ -34,6 +34,7 @@
 #include <filesystem>
 #include <cassert>
 #include <boost/algorithm/string/predicate.hpp>
+#include "stdafx.h"
 
 namespace Sleipnir {
 
@@ -193,7 +194,7 @@ namespace Sleipnir {
             const bool bSubtractGeneAvg, const bool bNormPlatform,
             const bool bNegativeCor, const bool bCheckDsetSize) {
 
-        fprintf(stderr, "Request received from client\n");
+        g_CatSleipnir().debug("InitializeQuery: Request received from client");
         assert(m_missingInitParams == false);
 
         // Copy a pointer to the read only attributes
@@ -659,8 +660,8 @@ namespace Sleipnir {
         if (dist_measure == CSeekDataset::CORRELATION) {
             bCorrelation = true;
             if (m_bSubtractGeneAvg || m_bNormPlatform || m_bLogit) {
-                fprintf(stderr,
-                        "Warning: setting subtract_avg, norm platform to false\n");
+                g_CatSleipnir().warn(
+                        "Warning: setting subtract_avg, norm platform to false");
                 m_bSubtractGeneAvg = false;
                 m_bNormPlatform = false;
                 m_bLogit = false;
@@ -729,7 +730,7 @@ namespace Sleipnir {
         for (i = 0; i < vecDBSetting.size(); i++) {
             if (dist_measure == CSeekDataset::CORRELATION &&
                 vecDBSetting[i]->sinfoDir == "NA") {
-                fprintf(stderr, "WARNING: sinfo dir not specified!\n");
+                g_CatSleipnir().warn("WARNING: sinfo dir not specified!");
                 m_missingInitParams = true;
             }
 
@@ -1145,14 +1146,16 @@ namespace Sleipnir {
     bool CSeekCentral::Write(const utype &i) {
         //assume m_bRandom = false
         char acBuffer[1024];
-        sprintf(acBuffer, "%s/%d.query", m_output_dir.c_str(), i);
-        CSeekTools::WriteArrayText(acBuffer, m_vecstrAllQuery[i]);
+        if (m_output_dir.length() > 0) {
+            sprintf(acBuffer, "%s/%d.query", m_output_dir.c_str(), i);
+            CSeekTools::WriteArrayText(acBuffer, m_vecstrAllQuery[i]);
 
-        sprintf(acBuffer, "%s/%d.dweight", m_output_dir.c_str(), i);
-        CSeekTools::WriteArray(acBuffer, m_weight[i]);
+            sprintf(acBuffer, "%s/%d.dweight", m_output_dir.c_str(), i);
+            CSeekTools::WriteArray(acBuffer, m_weight[i]);
 
-        sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
-        CSeekTools::WriteArray(acBuffer, m_master_rank);
+            sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
+            CSeekTools::WriteArray(acBuffer, m_master_rank);
+        }
 
         //send data to client
         if (m_bEnableNetwork) {
@@ -1189,7 +1192,9 @@ namespace Sleipnir {
                 if (wd[j].f == m_DEFAULT_NA) break;
                 vecOutput[1].push_back(roAttr->m_vecstrGenes[wd[j].i]);
             }
-            CSeekTools::Write2DArrayText(acBuffer, vecOutput);
+            if (m_output_dir.length() > 0) {
+                CSeekTools::Write2DArrayText(acBuffer, vecOutput);
+            }
         }
         return true;
     }
@@ -1523,8 +1528,8 @@ namespace Sleipnir {
                 */
             } else if (simulateWeight) {
                 if ((current_sm == EQUAL || current_sm == ORDER_STATISTICS) && !CheckWeight(i)) {
-                    fprintf(stderr, "Calculate dataset ordering\n");
-                    ret = system("date +%s%N 1>&2");
+                    g_CatSleipnir().debug("Calculate dataset ordering");
+                    // ret = system("date +%s%N 1>&2");
                     if (m_bEnableNetwork) {
                         if (CSeekNetwork::Send(m_iClient, "Calculate dataset ordering") == -1) {
                             fprintf(stderr, "Error sending message to client\n");
@@ -1542,8 +1547,8 @@ namespace Sleipnir {
                     i--;
                     continue;
                 } else if (current_sm == CV && !CheckWeight(i)) {
-                    fprintf(stderr, "Redo with equal weighting\n");
-                    ret = system("date +%s%N 1>&2");
+                    g_CatSleipnir().info("CV: Redo with equal weighting");
+                    // ret = system("date +%s%N 1>&2");
                     if (m_bEnableNetwork) {
                         if (CSeekNetwork::Send(m_iClient, "Redo with equal weighting") == -1) {
                             fprintf(stderr, "Error sending message to client\n");
@@ -1564,8 +1569,8 @@ namespace Sleipnir {
                 }
             }
 
-            fprintf(stderr, "Done search\n");
-            ret = system("date +%s%N 1>&2");
+            // fprintf(stderr, "Done search\n");
+            // ret = system("date +%s%N 1>&2");
 
             if (m_bEnableNetwork) {
                 if (CSeekNetwork::Send(m_iClient, "Done Search") == -1) {
@@ -1619,10 +1624,12 @@ namespace Sleipnir {
                         std::nth_element(all_w.begin(), all_w.begin() + n, all_w.end());
                         new_weight[k] = all_w[n];
                     }
-                    sprintf(acBuffer, "%s/%d.rand.dweight", m_output_dir.c_str(), i);
-                    CSeekTools::WriteArray(acBuffer, new_weight);
-                    sprintf(acBuffer, "%s/%d.rand.gscore", m_output_dir.c_str(), i);
-                    CSeekTools::WriteArray(acBuffer, new_score);
+                    if (m_output_dir.length() > 0) {
+                        sprintf(acBuffer, "%s/%d.rand.dweight", m_output_dir.c_str(), i);
+                        CSeekTools::WriteArray(acBuffer, new_weight);
+                        sprintf(acBuffer, "%s/%d.rand.gscore", m_output_dir.c_str(), i);
+                        CSeekTools::WriteArray(acBuffer, new_score);
+                    }
                     l = 0;
                 } else {
                     i--;
@@ -1634,8 +1641,10 @@ namespace Sleipnir {
                 // TODO GW - pass a tag in to write() to give the files distinct name
                 Write(i);
                 if (weightComponent) {
-                    sprintf(acBuffer, "%s/%d.dweight_comp", m_output_dir.c_str(), i);
-                    CSeekTools::WriteArray(acBuffer, wc);
+                    if (m_output_dir.length() > 0) {
+                        sprintf(acBuffer, "%s/%d.dweight_comp", m_output_dir.c_str(), i);
+                        CSeekTools::WriteArray(acBuffer, wc);
+                    }
                     vector <vector<string>> vecParts;
                     vecParts.resize(query.GetNumFold());
                     utype kk;
@@ -1654,8 +1663,10 @@ namespace Sleipnir {
                         if (j != query.GetNumFold() - 1)
                             strParts += "|";
                     }
-                    sprintf(acBuffer, "%s/%d.query_cvpart", m_output_dir.c_str(), i);
-                    CSeekTools::Write2DArrayText(acBuffer, vecParts);
+                    if (m_output_dir.length() > 0) {
+                        sprintf(acBuffer, "%s/%d.query_cvpart", m_output_dir.c_str(), i);
+                        CSeekTools::Write2DArrayText(acBuffer, vecParts);
+                    }
                     //send data to client
                     if (m_bEnableNetwork) {
                         if (CSeekNetwork::Send(m_iClient, wc) == -1) {

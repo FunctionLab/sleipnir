@@ -31,6 +31,7 @@
 *****************************************************************************/
 #include "seekreader.h"
 #include "seekerror.h"
+#include "stdafx.h"
 #include <regex>
 
 namespace Sleipnir {
@@ -96,7 +97,7 @@ namespace Sleipnir {
 
         int ret; //system call return
 
-        fprintf(stderr, "Initializing query map\n");
+        g_CatSleipnir().debug("Initializing query map");
         //ret = system("date +%s%N 1>&2");
         /*if(bNetwork && CSeekNetwork::Send(iClient, "Initializing query map")==-1){
             fprintf(stderr, "Error sending client message\n");
@@ -110,7 +111,7 @@ namespace Sleipnir {
             vc[i]->InitializeQueryBlock(allQ);
         }
 
-        fprintf(stderr, "Done initializing query map\n");
+        g_CatSleipnir().debug( "Done initializing query map");
         //ret = system("date +%s%N 1>&2");
         /*if(bNetwork && CSeekNetwork::Send(iClient,
             "Done initializing query map")==-1){
@@ -118,9 +119,9 @@ namespace Sleipnir {
             return false;
         }*/
 
-        fprintf(stderr, "Reading %lu query genes' correlations\n",
+        g_CatSleipnir().debug("Reading %lu query genes' correlations",
                 allQ.size());
-        ret = system("date +%s%N 1>&2");
+        // ret = system("date +%s%N 1>&2");
         if (bNetwork && CSeekNetwork::Send(iClient, "Reading " +
                                                     CSeekTools::ConvertInt(allQ.size()) +
                                                     " query genes' correlations (estimated time " +
@@ -172,8 +173,8 @@ namespace Sleipnir {
             }
         }
 
-        fprintf(stderr, "Finished reading query genes' correlations\n");
-        ret = system("date +%s%N 1>&2");
+        g_CatSleipnir().debug("Finished reading query genes' correlations");
+        // ret = system("date +%s%N 1>&2");
         if (bNetwork && CSeekNetwork::Send(iClient,
                                            "Finished reading. Now doing search (estimated time " +
                                            CSeekTools::ConvertInt(allQ.size()) +
@@ -227,7 +228,7 @@ namespace Sleipnir {
 
         int ret; //system call returns
 
-        fprintf(stderr, "Initializing gene map\n");
+        g_CatSleipnir().debug("Initializing gene map");
         //ret = system("date +%s%N 1>&2");
 #pragma omp parallel for \
     private(i) schedule(dynamic)
@@ -241,7 +242,7 @@ namespace Sleipnir {
             vc[i]->SetPlatform(vp[platform_id]);
         }
 
-        fprintf(stderr, "Done initializing gene map\n");
+        g_CatSleipnir().debug("Done initializing gene map");
         //ret = system("date +%s%N 1>&2");
         return true;
     }
@@ -281,8 +282,8 @@ namespace Sleipnir {
 
         int ret; //system call return
 
-        fprintf(stderr, "Start reading average and presence files\n");
-        ret = system("date +%s%N 1>&2");
+        g_CatSleipnir().debug("Start reading average and presence files");
+        // ret = system("date +%s%N 1>&2");
         for (i = 0; i < DB.size(); i++) {
             const vector <string> &dset = dbDataset[i];
             string strPrepInputDirectory = DBSetting[i]->prepDir;
@@ -316,17 +317,17 @@ namespace Sleipnir {
             }
         }
 
-        fprintf(stderr, "Done reading average and presence files\n");
-        ret = system("date +%s%N 1>&2");
+        g_CatSleipnir().debug("Done reading average and presence files");
+        // ret = system("date +%s%N 1>&2");
 
-        fprintf(stderr, "Initializing gene map\n");
-        ret = system("date +%s%N 1>&2");
+        g_CatSleipnir().debug("Initializing gene map");
+        // ret = system("date +%s%N 1>&2");
 #pragma omp parallel for \
     shared(vc, iDatasets) private(i) schedule(dynamic)
         for (i = 0; i < iDatasets; i++) vc[i]->InitializeGeneMap();
 
-        fprintf(stderr, "Done initializing gene map\n");
-        ret = system("date +%s%N 1>&2");
+        g_CatSleipnir().debug("Done initializing gene map");
+        // ret = system("date +%s%N 1>&2");
         return true;
     }
 

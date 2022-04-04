@@ -303,7 +303,7 @@ class SeekQueryArgs(object):
     """
 
 
-    def __init__(self, species="Unknown", genes=None, datasets=None, parameters=None, guideGenes=None, outputDir="/tmp/seek",):
+    def __init__(self, species="Unknown", genes=None, datasets=None, parameters=None, guideGenes=None, outputDir="",):
         self.species = species
         self.genes = genes
         self.datasets = datasets
@@ -1334,7 +1334,7 @@ SeekQueryArgs.thrift_spec = (
     (3, TType.LIST, 'datasets', (TType.STRING, 'UTF8', False), None, ),  # 3
     (4, TType.STRUCT, 'parameters', [SeekQueryParams, None], None, ),  # 4
     (5, TType.LIST, 'guideGenes', (TType.STRING, 'UTF8', False), None, ),  # 5
-    (6, TType.STRING, 'outputDir', 'UTF8', "/tmp/seek", ),  # 6
+    (6, TType.STRING, 'outputDir', 'UTF8', "", ),  # 6
 )
 all_structs.append(SeekResult)
 SeekResult.thrift_spec = (

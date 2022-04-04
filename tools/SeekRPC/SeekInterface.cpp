@@ -7,6 +7,7 @@
 #include "seekerror.h"
 #include "PclQuery.h"
 #include "SeekPValue.h"
+#include "stdafx.h"
 #include "gen-cpp/seek_rpc_constants.h"
 // #include "/usr/local/Cellar/gperftools/2.9.1_1/include/gperftools/heap-profiler.h"
 
@@ -27,7 +28,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
         // Initialize a seekCentral instance for each species.
         //  C++ automatically default-inits the mapped CSeekCentral() values on first reference
         try {
-            cout << "Initialize " << speciesName << endl;
+            g_CatSleipnir().info("SeekRPC: Initialize %s", speciesName.c_str());
             // Initialize the SeekCentral struct
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
             // Initialize the PCL cache
@@ -55,7 +56,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
 
     // start the task cleaner thread
     this->_cleanerThread = thread(&SeekInterface::runCleanTasksThread, this, taskTimeoutSec);
-    cout << "## Done Initializing SeekRPC ##" << endl;
+    g_CatSleipnir().info("SeekRPC: Ready");
 }
 
 void SeekInterface::seekQuery(const SeekQueryArgs &query, SeekResult &result)
@@ -102,20 +103,26 @@ bool SeekInterface::isQueryComplete(int64_t task_id) {
 }
 
 void SeekInterface::pvalueGenes(const PValueGeneArgs& query, PValueResult& result) {
-    // TaskInfoPtrS task = make_shared<TaskInfo>();
-    // task->queryType = QueryType::Pvalue;
-    // task->pvalueGeneQuery = query;
+
     if (this->speciesPvalueData.count(query.species) > 0) {
-        pvalueGenesCommon(query, result);
+        int64_t taskId = this->pvalueGenesAsync(query);
+        this->getPvalueResult(taskId, true, result);
     } else {
         result.success = false;
         result.status = QueryStatus::Error;
-        result.statusMsg = "Pvalue data not initialized properly for species (" + 
+        result.statusMsg = "Pvalue data not initialized properly for species (" +
             query.species + "), check pvalue directory";
         result.__isset.status = true;
         result.__isset.statusMsg = true;
     }
     return;
+}
+
+int64_t SeekInterface::pvalueGenesAsync(const PValueGeneArgs& query) {
+    TaskInfoPtrS task = make_shared<TaskInfo>();
+    task->queryType = QueryType::Pvalue;
+    task->pvalueGeneQuery = query;
+    return commonAsync(task);
 }
 
 void SeekInterface::pvalueDatasets(const PValueDatasetArgs& query, PValueResult& result) {
@@ -188,6 +195,41 @@ void SeekInterface::runQueryThread(TaskInfoPtrS task) {
         AtomicBoolFlag completionFlag(task->isComplete);
         lock_guard<AtomicBoolFlag> flag_lock(completionFlag);
 
+        // For Logging
+        string species = "NotSet";
+        string firstQueryGene = "NotSet";
+        int numQueryGenes = 0;
+        ResultUnion_t resUnion;
+        switch (task->queryType) {
+            case QueryType::Seek:
+                species = task->seekQuery.species;
+                numQueryGenes = task->seekQuery.genes.size();
+                if (numQueryGenes > 0) {
+                    firstQueryGene = task->seekQuery.genes[0];
+                }
+                resUnion.seekResult = &task->seekResult;
+                break;
+            case QueryType::Pcl:
+                species = task->pclQuery.species;
+                numQueryGenes = task->pclQuery.genes.size();
+                if (numQueryGenes > 0) {
+                    firstQueryGene = task->pclQuery.genes[0];
+                }
+                resUnion.pclResult = &task->pclResult;
+                break;
+            case QueryType::Pvalue:
+                species = task->pvalueGeneQuery.species;
+                numQueryGenes = task->pvalueGeneQuery.genes.size();
+                if (numQueryGenes > 0) {
+                    firstQueryGene = task->pvalueGeneQuery.genes[0];
+                }
+                resUnion.pvalueResult = &task->pvalueResult;
+                break;
+        }
+        g_CatSleipnir().info("%s(%ld): species %s: num_genes %d, query gene[0]: %s",
+                            queryTypeName(task->queryType), task->taskId,
+                            species.c_str(), numQueryGenes, firstQueryGene.c_str());
+
         try {
             /* Wait on semaphore if max queries already running,
             *   the lock_guard will automatically free the semaphore
@@ -203,16 +245,15 @@ void SeekInterface::runQueryThread(TaskInfoPtrS task) {
                 this->seekQueryCommon(task->seekQuery, task->seekResult, task->messageLog);
             } else if (task->queryType == QueryType::Pcl) {
                 this->pclQueryCommon(task->pclQuery, task->pclResult);
+            } else if (task->queryType == QueryType::Pvalue) {
+                this->pvalueGenesCommon(task->pvalueGeneQuery, task->pvalueResult);
             }
         } catch (named_error &err) {
-            string trace = print_exception_stack(err);
-            task->seekResult.success = false;
-            task->seekResult.status = QueryStatus::Error;
-            task->seekResult.statusMsg = trace;
-            task->seekResult.__isset.status = true;
-            task->seekResult.__isset.statusMsg = true;
+            string traceMsg = print_exception_stack(err);
+            setResultError(task->queryType, QueryStatus::Error, traceMsg, resUnion);
             /* (for future) can use exception_ptr to return the exception to main thread */
         }
+        g_CatSleipnir().info("%s(%ld): Completed", queryTypeName(task->queryType), task->taskId);
     }
     assert(task->isComplete = true); // set by flag lock_guard
     return;
@@ -243,8 +284,11 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
     }
 
     // Create the output directory if needed
-    // TODO - check if directory exists first
-    filesystem::create_directory(query.outputDir);
+    if (query.outputDir.length() > 0) {
+        if (!filesystem::exists(query.outputDir)) {
+            filesystem::create_directory(query.outputDir);
+        }
+    }
 
     vector<string> queryGenes(query.genes);
     if (params.useGeneSymbols == true) {
@@ -362,96 +406,104 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
     querySC.Destruct();
 }
 
+void setResultError(QueryType qtype, QueryStatus::type status, string errMsg, ResultUnion_t res) {
+    switch (qtype) {
+        case QueryType::Seek:
+            res.seekResult->success = false;
+            res.seekResult->status = status;
+            res.seekResult->statusMsg = errMsg;
+            res.seekResult->__isset.status = true;
+            res.seekResult->__isset.statusMsg = true;
+            break;
+        case QueryType::Pcl:
+            res.pclResult->success = false;
+            res.pclResult->status = status;
+            res.pclResult->statusMsg = errMsg;
+            res.pclResult->__isset.status = true;
+            res.pclResult->__isset.statusMsg = true;
+            break;
+        case QueryType::Pvalue:
+            res.pvalueResult->success = false;
+            res.pvalueResult->status = status;
+            res.pvalueResult->statusMsg = errMsg;
+            res.pvalueResult->__isset.status = true;
+            res.pvalueResult->__isset.statusMsg = true;
+            break;
+    }
+}
+
+void SeekInterface::getResultCommon(int64_t task_id, QueryType qtype, bool block, ResultUnion_t res)
+{
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        string errMsg = "Task not found or timed out: task_id: " + to_string(task_id);
+        setResultError(qtype, QueryStatus::Error, errMsg, res);
+        return;
+    }
+
+    if (task->queryType != qtype) {
+        string errMsg = "Wrong getResult() function called for this TaskID's query type";
+        setResultError(qtype, QueryStatus::Error, errMsg, res);
+        return;
+    }
+
+    if (!block && !task->isComplete) {
+        setResultError(qtype, QueryStatus::Incomplete, "", res);
+        return;
+    }
+
+    /* join the task thread */
+    this->joinTask(*task);
+
+    /* populate the return results */
+    {
+        lock_guard tlock(task->taskMutex);
+        switch (qtype) {
+            case QueryType::Seek:
+                *res.seekResult = task->seekResult;
+                break;
+            case QueryType::Pcl:
+                *res.pclResult = task->pclResult;
+                break;
+            case QueryType::Pvalue:
+                *res.pvalueResult = task->pvalueResult;
+                break;
+        }
+    }
+
+    /* remove the task from the taskMap */
+    this->removeMappedTask(task->taskId);
+
+    return;
+}
 
 void SeekInterface::getSeekResult(int64_t task_id, bool block, SeekResult &result)
 {
-    /* lookup the task */
-    TaskInfoPtrS task = this->getTask(task_id);
-    if (task == nullptr) {
-        result.success = false;
-        result.status = QueryStatus::Error;
-        result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
-        result.__isset.status = true;
-        result.__isset.statusMsg = true;
-        return;
-    }
-
-    if (task->queryType != QueryType::Seek) {
-        result.success = false;
-        result.status = QueryStatus::Error;
-        result.statusMsg = "Wrong getResult() function called for this TaskID's query type";
-        result.__isset.status = true;
-        result.__isset.statusMsg = true;
-        return;
-    }
-
-    if (!block && !task->isComplete) {
-        result.success = false;
-        result.status = QueryStatus::Incomplete;
-        result.__isset.status = true;
-        return;
-    }
-
-    /* join the task thread */
-    this->joinTask(*task);
-
-    /* populate the return results */
-    {
-        lock_guard tlock(task->taskMutex);
-        result = task->seekResult;
-    }
-
-    /* remove the task from the taskMap */
-    this->removeMappedTask(task_id);
+    ResultUnion_t resUnion;
+    resUnion.seekResult = &result;
+    this->getResultCommon(task_id, QueryType::Seek, block, resUnion);
 
     return;
 }
 
-// TODO - not obvious how to combine getSeekResult (above) and getPclResult
 void SeekInterface::getPclResult(int64_t task_id, bool block, PclResult &result)
 {
-    /* lookup the task */
-    TaskInfoPtrS task = this->getTask(task_id);
-    if (task == nullptr) {
-        result.success = false;
-        result.status = QueryStatus::Error;
-        result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
-        result.__isset.status = true;
-        result.__isset.statusMsg = true;
-        return;
-    }
-
-    if (task->queryType != QueryType::Pcl) {
-        result.success = false;
-        result.status = QueryStatus::Error;
-        result.statusMsg = "Wrong getResult() function called for this TaskID's query type";
-        result.__isset.status = true;
-        result.__isset.statusMsg = true;
-        return;
-    }
-
-    if (!block && !task->isComplete) {
-        result.success = false;
-        result.status = QueryStatus::Incomplete;
-        result.__isset.status = true;
-        return;
-    }
-
-    /* join the task thread */
-    this->joinTask(*task);
-
-    /* populate the return results */
-    {
-        lock_guard tlock(task->taskMutex);
-        result = task->pclResult;
-    }
-
-    /* remove the task from the taskMap */
-    this->removeMappedTask(task_id);
+    ResultUnion_t resUnion;
+    resUnion.pclResult = &result;
+    this->getResultCommon(task_id, QueryType::Pcl, block, resUnion);
 
     return;
 }
 
+void SeekInterface::getPvalueResult(int64_t task_id, bool block, PValueResult &result)
+{
+    ResultUnion_t resUnion;
+    resUnion.pvalueResult = &result;
+    this->getResultCommon(task_id, QueryType::Pvalue, block,  resUnion);
+
+    return;
+}
 
 void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result) {
     const PclSettings &settings = query.settings;

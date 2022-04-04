@@ -24,6 +24,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include "seekerror.h"
 #include "PclQuery.h"
+#include "stdafx.h"
 
 using namespace Sleipnir;
 using namespace std;
@@ -72,7 +73,7 @@ void *do_pcl_query(void *th_arg) {
     BoolFlag completionFlag(my->isComplete);
     lock_guard<BoolFlag> flag_lock(completionFlag);
 
-    fprintf(stderr, "start processing...\n");
+    g_CatSleipnir().debug("PCL Query: start processing...");
 
     string pcl_input_dir = cc->roAttr->m_vecDBSetting[0]->pclDir;
 
@@ -148,7 +149,7 @@ void *do_pcl_query(void *th_arg) {
     //CFullMatrix<float> *vCoexpression = new CFullMatrix<float>(); //(EXTRA)
     //vCoexpression->Initialize(genes, datasets); //(EXTRA)
 
-    fprintf(stderr, "Reading data...\n");
+    g_CatSleipnir().debug("PCL Query: Reading data...");
 
     float NaN = -9999;
 

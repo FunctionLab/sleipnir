@@ -270,7 +270,7 @@ class SeekQueryArgs : public virtual ::apache::thrift::TBase {
   SeekQueryArgs(const SeekQueryArgs&);
   SeekQueryArgs& operator=(const SeekQueryArgs&);
   SeekQueryArgs() : species("Unknown"),
-                    outputDir("/tmp/seek") {
+                    outputDir("") {
   }
 
   virtual ~SeekQueryArgs() noexcept;

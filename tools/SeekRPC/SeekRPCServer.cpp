@@ -16,6 +16,7 @@
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 #include "seekerror.h"
+#include "stdafx.h"
 
 using namespace std;
 using namespace SeekRPC;
@@ -29,6 +30,7 @@ struct Args {
     uint32_t port = 9090;
     uint32_t taskTimeoutSec = 5 * 60;  // default 5 minutes in seconds
     uint32_t maxThreads = 0;  // default will base on hardware
+    bool verbose = false;
 };
 
 bool parseArgs(int argc, char **argv, Args &args)
@@ -42,10 +44,11 @@ bool parseArgs(int argc, char **argv, Args &args)
         {"port", required_argument, 0, 'p'},
         {"timeout", required_argument, 0, 't'},
         {"maxThreads", required_argument, 0, 'm'},
+        {"verbose", no_argument, 0, 'v'},
         {0, 0, 0, 0}};
     int opt = 0;
     int long_index = 0;
-    while ((opt = getopt_long(argc, argv, "c:p:t:m:",
+    while ((opt = getopt_long(argc, argv, "c:p:t:m:v",
                               long_options, &long_index)) != -1)
     {
         switch (opt)
@@ -61,6 +64,9 @@ bool parseArgs(int argc, char **argv, Args &args)
             break;
         case 'm':
             args.maxThreads = atoi(optarg);
+            break;
+        case 'v':
+            args.verbose = true;
             break;
         default:
             cout << "Error: unrecognized options: " << opt << endl;
@@ -87,12 +93,18 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
+    int logLevel = Priority::INFO;
+    if (args.verbose) {
+        logLevel = Priority::DEBUG;
+    }
+    CMeta Meta(logLevel);
+
     try {
         if (args.maxThreads == 0) {
             args.maxThreads = thread::hardware_concurrency();
         }
-        cout << "### max concurrency: " << to_string(args.maxThreads) << endl;
-        cout << "### max thread time(sec): " << to_string(args.taskTimeoutSec) << endl;
+        g_CatSleipnir().info("SeekRPC Setting: max concurrency: %d", args.maxThreads);
+        g_CatSleipnir().info("SeekRPC Setting: max thread time(sec): %d", args.taskTimeoutSec);
         SeekInterface seekInterface(args.configFiles, args.maxThreads, args.taskTimeoutSec);
 
         bool startServer = true;
@@ -111,14 +123,15 @@ int main(int argc, char** argv)
             */
             // For multi-threaded server
             TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
-            cout << "Listen on port: " << args.port << endl;
+            g_CatSleipnir().info("SeekRPC: Listen on port: %d", args.port);
             server.serve();
         }
         printf("Exiting Server ...\n");
     } catch(exception &err) {
-        print_exception_stack(err);
+        g_CatSleipnir().error("SeekRPC: Fatal Server Exception");
+        cerr << print_exception_stack(err) << endl;
         return -1;
     } catch(...) {
-        cout << "Uncaught Exception\n";
+        cout << "SeekRPC: Uncaught Exception\n";
     }
 }

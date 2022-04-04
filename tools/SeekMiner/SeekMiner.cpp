@@ -48,6 +48,8 @@ int main(int iArgs, char **aszArgs) {
         return 1;
     }
 
+    CMeta Meta(Priority::DEBUG);
+
     string method = sArgs.weighting_method_arg;
     string cv = sArgs.CV_partition_arg;
     int cv_fold = sArgs.CV_fold_arg;
