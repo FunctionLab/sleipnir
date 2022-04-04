@@ -282,7 +282,7 @@ namespace Sleipnir {
         size_t i, j;
         size_t offset1 = GetOffset(iOne);
         if (this->m_fstm.is_open()) {
-            cerr << "file is already opened" << endl;
+            g_CatSleipnir().debug("file is already opened");
         } else {
             m_fstm.clear();
             m_fstm.open(this->strFileName.c_str(), ios_base::binary | ios_base::in);
@@ -440,11 +440,11 @@ namespace Sleipnir {
 
         size_t bb = 0;
         size_t sofar = 0;
-        fprintf(stderr, "Number of times: %d\n", numTimes);
+        g_CatSleipnir().debug("Number of times: %d", numTimes);
         for (bb = 0; bb < numTimes; sofar += sizes[bb], bb++) {
-            fprintf(stderr, "bb sizes[bb] sofar: %zu %lu %zu\n", bb, sizes[bb], sofar);
+            g_CatSleipnir().debug("bb sizes[bb] sofar: %zu %lu %zu", bb, sizes[bb], sofar);
 
-            fprintf(stderr, "Started allocated memory %lu\n", bb);
+            g_CatSleipnir().debug("Started allocated memory %lu", bb);
             /* load all Databaselets into memory, for efficiency */
             auto **charImages =
                     (unsigned char **) malloc(vecDatabaselet.size() * sizeof(unsigned char *));
@@ -459,9 +459,9 @@ namespace Sleipnir {
                 charImages[i] = charImages[i - 1] + vecDatabaselet[i - 1]->GetSizePair() * numPairs;
             }
 
-            fprintf(stderr, "Finished allocated memory\n");
+            g_CatSleipnir().debug("Finished allocated memory");
 
-            fprintf(stderr, "Started reading into memory\n");
+            g_CatSleipnir().debug("Started reading into memory");
 
             /* read databaselet into charImages */
             for (i = 0; i < vecDatabaselet.size(); i++) {
@@ -475,7 +475,7 @@ namespace Sleipnir {
                 current->m_fstm.read((char *) charImages[i], current->GetSizePair() * numPairs);
             }
 
-            fprintf(stderr, "Finished reading into memory\n");
+            g_CatSleipnir().debug("Finished reading into memory");
 
             //Global gene name mapping
             map <string, size_t> mapstrintGenes;
@@ -575,7 +575,7 @@ namespace Sleipnir {
                     DBS.m_fstm.close();
                     free(abImage);
 
-                    fprintf(stderr, "Finished writing abImage gene %lu (of %lu) in %lu (of %lu)\n", i,
+                    g_CatSleipnir().debug("Finished writing abImage gene %lu (of %lu) in %lu (of %lu)", i,
                             sizes[bb], bb, sizes.size());
 
                 }
@@ -602,9 +602,9 @@ namespace Sleipnir {
                 size_t iGeneOne, iGeneTwo;
                 size_t offset1, offset2, offset3;
 
-                fprintf(stderr, "GetSizeGene() %zu\n", DBS.GetSizeGene());
-                fprintf(stderr, "GetSizePair() %zu\n", DBS.GetSizePair());
-                fprintf(stderr, "first->m_iGenes %d\n", first->m_iGenes);
+                g_CatSleipnir().debug("GetSizeGene() %zu", DBS.GetSizeGene());
+                g_CatSleipnir().debug("GetSizePair() %zu", DBS.GetSizePair());
+                g_CatSleipnir().debug("first->m_iGenes %d", first->m_iGenes);
                 if (!first->m_useNibble) {
                     for (iGeneOne = 0; iGeneOne < sizes[bb]; ++iGeneOne) {
                         offset1 = DBS.GetSizeGene() * iGeneOne;

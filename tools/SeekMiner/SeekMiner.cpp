@@ -48,7 +48,7 @@ int main(int iArgs, char **aszArgs) {
         return 1;
     }
 
-    CMeta Meta(Priority::DEBUG);
+    CMeta Meta(Priority::INFO);
 
     string method = sArgs.weighting_method_arg;
     string cv = sArgs.CV_partition_arg;
@@ -371,25 +371,23 @@ int main(int iArgs, char **aszArgs) {
     //csfinal->EqualWeightSearch();
     //csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
     //csfinal->OrderStatistics();
-    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-    fprintf(stderr, "Destructing...\n");
-    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("SeekMiner: memory usage %lu", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("SeekMiner: Destructing...");
     csfinal->Destruct();
-    fprintf(stderr, "Deleting...\n");
-    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("SeekMiner: memory usage after destruct %lu", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("Deleting...");
     delete csfinal;
 
-    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("SeekMiner: memory usage after delete %lu", CMeta::GetMemoryUsage());
 
-    fprintf(stderr, "Deleting DBSetting...\n");
-    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("Deleting DBSetting...");
     //if(add_db!="NA"){
     for (i = 0; i < cc.size(); i++) {
         delete cc[i];
     }
     //}
-    fprintf(stderr, "Finished deleting DBSetting...\n");
-    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    g_CatSleipnir().debug("Finished deleting DBSetting...");
+    g_CatSleipnir().debug("SeekMiner: memory usage after deleting DBSetting%lu", CMeta::GetMemoryUsage());
 
     cc.clear();
 

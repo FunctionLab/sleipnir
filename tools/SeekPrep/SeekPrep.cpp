@@ -59,7 +59,7 @@ bool CalculateMatrix(const NormMode norm_mode,
         vector <utype> gpres;
         CSeekTools::InitVector(gpres, vecstrGenes.size(), (utype) 0);
         for (i = 0; i < dab_list.size(); i++) {
-            fprintf(stderr, "Reading %zu of %lu: %s\n", i, dab_list.size(),
+            g_CatSleipnir().debug("Reading %zu of %lu: %s", i, dab_list.size(),
                     dab_list[i].c_str());
             CSeekIntIntMap d1(vecstrGenes.size());
             string dabfile = dab_dir + "/" + dab_list[i];
@@ -81,7 +81,7 @@ bool CalculateMatrix(const NormMode norm_mode,
                 res.Set(i, j, 0);
 
         for (i = 0; i < dab_list.size(); i++) {
-            fprintf(stderr, "Reading %zu of %lu: %s\n", i, dab_list.size(),
+            g_CatSleipnir().debug("Reading %zu of %lu: %s", i, dab_list.size(),
                     dab_list[i].c_str());
             CSeekIntIntMap d1(vecstrGenes.size());
             string dabfile = dab_dir + "/" + dab_list[i];
@@ -96,9 +96,9 @@ bool CalculateMatrix(const NormMode norm_mode,
                 CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1,
                                                          vecstrGenes, (int) (0.10 * vecstrGenes.size()), exp);
             }
-            fprintf(stderr, "Summing...\n");
+            g_CatSleipnir().debug("Summing...");
             CSeekWriter::SumSparseMatrix(sm, res, d1, w[i]);
-            fprintf(stderr, "Finished Summing...\n");
+            g_CatSleipnir().debug("Finished Summing...\n");
         }
 
         /*for(i=0; i<vecstrGenes.size(); i++){
@@ -124,7 +124,7 @@ bool CalculateMatrix(const NormMode norm_mode,
                 res.Set(i, j, 0);
 
         for (i = 0; i < dab_list.size(); i++) {
-            fprintf(stderr, "Reading %zu of %lu: %s\n", i, dab_list.size(),
+            g_CatSleipnir().debug("Reading %zu of %lu: %s", i, dab_list.size(),
                     dab_list[i].c_str());
             CSeekIntIntMap d1(vecstrGenes.size());
             string dabfile = dab_dir + "/" + dab_list[i];
@@ -152,7 +152,7 @@ bool CalculateMatrix(const NormMode norm_mode,
                 res.Set(i, j, 0);
 
         for (i = 0; i < dab_list.size(); i++) {
-            fprintf(stderr, "Reading %zu of %lu: %s\n", i, dab_list.size(),
+            g_CatSleipnir().debug("Reading %zu of %lu: %s", i, dab_list.size(),
                     dab_list[i].c_str());
             CSeekIntIntMap d1(vecstrGenes.size());
             string dabfile = dab_dir + "/" + dab_list[i];
@@ -346,7 +346,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
                     //fprintf(stderr, "%.5f\t%.5f\n", vv, v);
                     if (isnan(vv) || isinf(vv) || isnan(vc[k]->GetGeneAverage(j)) ||
                         isinf(vc[k]->GetGeneAverage(j))) {
-                        fprintf(stderr, "%d D%d %.5f %.5f %d\n", (int) j, (int) k,
+                        g_CatSleipnir().debug("%d D%d %.5f %.5f %d", (int) j, (int) k,
                                 vv, vc[k]->GetGeneAverage(j), mapG->GetForward(j));
                     }
                     //v = quant[uc];
@@ -406,6 +406,8 @@ int main(int iArgs, char **aszArgs) {
         cmdline_parser_print_help();
         return 1;
     }
+
+    CMeta Meta(Priority::INFO);
 
     if (sArgs.datasetsize_flag == 1) {
         // open pcl file and ouput number of expiements
@@ -526,7 +528,7 @@ int main(int iArgs, char **aszArgs) {
             size_t iN;
 
             Dat.AveStd(gmean, gstdev, iN);
-            fprintf(stderr, "%.5f %.5f\n", (float) gmean, (float) gstdev);
+            g_CatSleipnir().debug("%.5f %.5f", (float) gmean, (float) gstdev);
             vector<float> vv;
             vv.resize(2);
             vv[0] = (float) gmean;
@@ -586,11 +588,11 @@ int main(int iArgs, char **aszArgs) {
                 //fprintf(stderr, "done\n");
             }
             //DEBUG
-            fprintf(stderr, "UCSC genes\tVariance\tAverage\n");
+            g_CatSleipnir().debug("UCSC genes\tVariance\tAverage");
             for (j = 0; j < vecstrGenes.size(); j++) {
                 utype gene = pcl.GetGene(vecstrGenes[j]);
                 if (CSeekTools::IsNaN(gene)) continue;
-                fprintf(stderr, "%s\t%0.4f\t%.4f\n", vecstrGenes[j].c_str(),
+                g_CatSleipnir().debug("%s\t%0.4f\t%.4f", vecstrGenes[j].c_str(),
                         var[j], avg[j]);
             }
             //fprintf(stderr, "G\n");
@@ -744,7 +746,7 @@ int main(int iArgs, char **aszArgs) {
             }
 
             endTime = time(nullptr);
-            printf("init time %ld sec\n", endTime - startTime);
+            g_CatSleipnir().debug("init time %ld sec", endTime - startTime);
             startTime = time(nullptr);
 
             //printf("Dataset initialized"); getchar();
@@ -758,13 +760,14 @@ int main(int iArgs, char **aszArgs) {
                 int tid = omp_get_thread_num();
                 string DBFile = dblist[i];
                 vector <string> localVectrQuery;
-                fprintf(stderr, "opening db file %s\n", DBFile.c_str());
+                g_CatSleipnir().debug("opening db file %s", DBFile.c_str());
+                g_CatSleipnir().info("Gplat: processing db file %d", i);
                 OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
                        vecstrGenes, mapiPlatform, quant, vc[tid],
                        platform_avg_threads[tid], platform_stdev_threads[tid],
                        platform_count_threads[tid],
                        localVectrQuery, logit);
-                fprintf(stderr, "finished opening db file %s\n",
+                g_CatSleipnir().debug("finished opening db file %s",
                         DBFile.c_str());
             }
 
@@ -839,19 +842,19 @@ int main(int iArgs, char **aszArgs) {
 
             CDataPair Dat;
             char outFile[1024];
-            fprintf(stderr, "Opening file...\n");
+            g_CatSleipnir().debug("Opening file...");
             //if(!Dat.Open(sArgs.dabinput_arg, false, 2, false, false, true)){
             if (!Dat.Open(sArgs.dabinput_arg, false, false, 2, false, false)) {
                 cerr << "error opening file" << endl;
                 return 1;
             }
-            fprintf(stderr, "Finished opening file\n");
+            g_CatSleipnir().debug("Finished opening file");
             string fileName = CMeta::Basename(sArgs.dabinput_arg);
             string fileStem = CMeta::Deextension(fileName);
             sprintf(outFile, "%s/%s.2.dab", sArgs.dir_out_arg,
                     fileStem.c_str());
             int max_rank = sArgs.max_rank_arg;
-            fprintf(stderr, "Using max_rank: %d\n", max_rank);
+            g_CatSleipnir().info("Using max_rank: %d\n", max_rank);
             //cutoff, expTransform, divideNorm, subtractNorm
             //CSeekWriter::NormalizeDAB(Dat, vecstrGenes, true, false, true, false);
             //CSeekWriter::RankNormalizeDAB(Dat, vecstrGenes, max_rank, rbp_p);
@@ -915,7 +918,7 @@ int main(int iArgs, char **aszArgs) {
             float ff[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
             for (i = 0; i < 9; i++) {
                 auto ind = (size_t)((float) d.size() * ff[i]);
-                fprintf(stderr, "%.3f %.3e\n", ff[i], d[ind]);
+                g_CatSleipnir().debug("%.3f %.3e", ff[i], d[ind]);
             }
             return 1;
         }
@@ -936,7 +939,7 @@ int main(int iArgs, char **aszArgs) {
                 cerr << "error opening file" << endl;
                 return 1;
             }
-            fprintf(stderr, "Finished opening file\n");
+            g_CatSleipnir().debug("Finished opening file");
             string fileName = CMeta::Basename(sArgs.dabinput_arg);
             string fileStem = CMeta::Deextension(fileName);
             sprintf(outFile, "%s/%s.2.dab", sArgs.dir_out_arg, fileStem.c_str());
@@ -971,7 +974,7 @@ int main(int iArgs, char **aszArgs) {
                 cerr << "error opening file" << endl;
                 return 1;
             }
-            fprintf(stderr, "Finished opening file\n");
+            g_CatSleipnir().debug("Finished opening file");
             string fileName = CMeta::Basename(sArgs.dabinput_arg);
             string fileStem = CMeta::Deextension(fileName);
             sprintf(outFile, "%s/%s.dab", sArgs.dir_out_arg, fileStem.c_str());
@@ -1133,7 +1136,7 @@ int main(int iArgs, char **aszArgs) {
             d1.Add(i);
         }
 
-        fprintf(stderr, "%.2f %.2f %d\n", max_count, min_count_required,
+        g_CatSleipnir().debug("%.2f %.2f %d", max_count, min_count_required,
                 numValidGenes);
 
         uint32_t dim;
@@ -1156,11 +1159,11 @@ int main(int iArgs, char **aszArgs) {
             return -1;
         }*/
 
-        fprintf(stderr, "Begin Reading\n");
+        g_CatSleipnir().debug("Begin Reading");
         if (enableWeight) {
-            fprintf(stderr, "Enable weight: True\n");
+            g_CatSleipnir().info("Enable weight: True\n");
         } else {
-            fprintf(stderr, "Enable weight: False\n");
+            g_CatSleipnir().info("Enable weight: False\n");
         }
         CDat CD;
         CD.Open(validGenes);
@@ -1174,7 +1177,7 @@ int main(int iArgs, char **aszArgs) {
 
         for (i = 0; (i + 1) < dim; i++) {
             if (i % 2000 == 0) {
-                fprintf(stderr, "Finished %d\n", i);
+                g_CatSleipnir().debug("Finished %d", i);
             }
             istm1.read((char *) adScores, sizeof(*adScores) * (dim - i - 1));
             istm2.read((char *) uCounts, sizeof(*uCounts) * (dim - i - 1));
