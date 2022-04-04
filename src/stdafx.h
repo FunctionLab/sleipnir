@@ -155,11 +155,11 @@ namespace Sleipnir {
         }
 
         static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
-            std::time_t now = time(nullptr);
-            std::tm * ptm = localtime(&now);
+            time_t now = time(nullptr);
+            tm * ptm = localtime(&now);
             char time_str[64];
             // Format: 	2001-08-23::14:55:02
-            std::strftime(time_str, 256, "%F::%T", ptm);
+            strftime(time_str, 256, "%F::%T", ptm);
             fprintf( stderr, "%s ", szTag );
             fprintf( stderr, "%s ", time_str );
             fprintf( stderr, " : " );
