@@ -16,6 +16,9 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     list(APPEND EXTRA_LIBRARIES stdc++fs gomp)
 endif()
 
+if(USE_LOG4CPP)
+    list(APPEND EXTRA_LIBRARIES ${LOG4CPP_LIBRARY})
+endif()
 
 target_link_libraries(
     unit_tests

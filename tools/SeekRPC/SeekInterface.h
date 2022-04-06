@@ -91,7 +91,6 @@ class SeekInterface {
     double maxTaskTimeSec;
     thread _cleanerThread;
     atomic_int64_t next_task_id = 1;  // first task_id
-    atomic_int64_t counter = 0;
  };
 
 inline const char* queryTypeName(QueryType qtype) {

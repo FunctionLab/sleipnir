@@ -17,7 +17,7 @@ def funcThread(work_queue, tid=0, returnCodeQueue=None):
             func = job.get('func', None)
             if func is None:
                 raise ValueError('Function not defined')
-            print(f'Thread {tid}: func: {func.__name__}, args: {args}, kwargs: {kwargs}')
+            # print(f'Thread {tid}: func: {func.__name__}, args: {args}, kwargs: {kwargs}')
             try:
                 # Run the requested function
                 res = func(*args, **kwargs)
