@@ -29,8 +29,8 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef STDAFX_H
-#define STDAFX_H
+#ifndef SEEKPREP_STDAFX_H
+#define SEEKPREP_STDAFX_H
 
 #define __STDC_LIMIT_MACROS
 
@@ -48,7 +48,8 @@ using namespace std;
 #include "seekreader.h"
 #include "seekwriter.h"
 #include "meta.h"
+#include "../../src/stdafx.h" // top level stdafx
 
 using namespace Sleipnir;
 
-#endif // STDAFX_H
+#endif // SEEKPREP_STDAFX_H

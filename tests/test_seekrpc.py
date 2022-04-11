@@ -431,6 +431,7 @@ class TestSeekRPC:
         # Take one query and get the gscores and ranks (take one from random dir, i.e. 3.gscore)
         # Offline, one time, used the legacy pvalue server to get the score and rank based pvalues for that query
         # Run the new pvalue server and query against all genes and a partial set of genes
+        random.seed(10)
 
         # Use Internal Client Connection
         client = TestSeekRPC.client

@@ -42,6 +42,13 @@ public:
 
 using TaskInfoPtrS = shared_ptr<TaskInfo>;
 
+typedef union resultUnion {
+    SeekResult *seekResult;
+    PclResult *pclResult;
+    PValueResult *pvalueResult;
+} ResultUnion_t;
+
+
 class SeekInterface {
   public:
     SeekInterface(vector<string> &configFiles, uint32_t maxConcurreny, uint32_t taskTimeoutSec);
@@ -51,7 +58,9 @@ class SeekInterface {
     void getSeekResult(int64_t task_id, bool block, SeekResult &result);
     string getProgressMessage(int64_t task_id);
     void pvalueGenes(const PValueGeneArgs& query, PValueResult& result);
+    int64_t pvalueGenesAsync(const PValueGeneArgs& query);
     void pvalueDatasets(const PValueDatasetArgs& query, PValueResult& result);
+    void getPvalueResult(int64_t task_id, bool block, PValueResult &result);
     void pclQuery(const PclQueryArgs &query, PclResult &result);
     int64_t pclQueryAsync(const PclQueryArgs &query);
     void getPclResult(int64_t task_id, bool block, PclResult &result);
@@ -62,6 +71,7 @@ class SeekInterface {
     void seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, ThreadSafeQueue<string>  &log);
     void pclQueryCommon(const PclQueryArgs &query, PclResult &result);
     void pvalueGenesCommon(const PValueGeneArgs &query, PValueResult &result);
+    void getResultCommon(int64_t task_id, QueryType qtype, bool block, ResultUnion_t res);
     int64_t commonAsync(TaskInfoPtrS task);
     void runQueryThread(TaskInfoPtrS task);
     void runCleanTasksThread(uint32_t intervalSec);
@@ -82,5 +92,19 @@ class SeekInterface {
     thread _cleanerThread;
     atomic_int64_t next_task_id = 1;  // first task_id
  };
+
+inline const char* queryTypeName(QueryType qtype) {
+  switch(qtype) {
+  case QueryType::Seek:
+    return "SeekQuery";
+  case QueryType::Pcl:
+    return "PCLQuery";
+  case QueryType::Pvalue:
+    return "PvalueQuery";
+  }
+}
+
+void setResultError(QueryType qtype, QueryStatus::type status, string errMsg, ResultUnion_t res);
+
 
 #endif  // SEEKINTERFACE_H

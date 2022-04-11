@@ -23,6 +23,7 @@
 #include "cmdline.h"
 #include "seekhelper.h"
 
+
 #define BACKLOG 10   // how many pending connections queue will hold
 char *PORT;
 int NUM_DSET_MEMORY = 50;
@@ -191,6 +192,8 @@ int main(int iArgs, char **aszArgs) {
         cmdline_parser_print_help();
         return 1;
     }
+
+    CMeta Meta(Priority::DEBUG);
 
     bool useNibble = false;
 

@@ -47,7 +47,7 @@ struct SeekQueryArgs {
     3: optional list<string> datasets;
     4: optional SeekQueryParams parameters;
     5: optional list<string> guideGenes;
-    6: optional string outputDir = "/tmp/seek";
+    6: optional string outputDir = "";
 }
 
 // was QueryResult

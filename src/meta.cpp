@@ -28,8 +28,9 @@ namespace Sleipnir {
 
     CMeta::CMeta(int iVerbosity, size_t iRandomSeed) {
 #ifndef USE_LOG4CPP_STUB
+        // Using Log4cpp
         OstreamAppender *pAppOstm = new OstreamAppender("cerr", &cerr);
-#endif // USE_LOG4CPP_STUB
+#endif // End !USE_LOG4CPP_STUB
 
         srand((iRandomSeed == -1) ?
               #ifdef _MSC_VER
@@ -39,11 +40,15 @@ namespace Sleipnir {
               #endif // _MSC_VER
                                   : iRandomSeed);
 #ifndef USE_LOG4CPP_STUB
+        // Using Log4cpp
         pAppOstm->setLayout(new BasicLayout());
         g_CatSleipnir().setAdditivity(false);
         g_CatSleipnir().setAppender(pAppOstm);
         g_CatSleipnir().setPriority(iVerbosity * Priority::ALERT);
-#endif // USE_LOG4CPP_STUB
+#else // USE_LOG4CPP_STUB
+        // Using stub instead
+        g_CatSleipnir().setPriority(iVerbosity);
+#endif
     }
 
     CMeta::~CMeta() {

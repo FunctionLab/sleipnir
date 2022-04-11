@@ -9,7 +9,7 @@ def funcThread(work_queue, tid=0, returnCodeQueue=None):
     '''Runs python function jobs received from work_queue'''
     # TODO - switch to runinng the functions using the multiprocessing library
     #  to avoid GIL global thread interpreter lock contention
-    print('start thread')
+    # print('start thread')
     try:
         while job := work_queue.get(block=False):
             args = job.get('args', ())
@@ -17,7 +17,7 @@ def funcThread(work_queue, tid=0, returnCodeQueue=None):
             func = job.get('func', None)
             if func is None:
                 raise ValueError('Function not defined')
-            print(f'Thread {tid}: func: {func.__name__}, args: {args}, kwargs: {kwargs}')
+            # print(f'Thread {tid}: func: {func.__name__}, args: {args}, kwargs: {kwargs}')
             try:
                 # Run the requested function
                 res = func(*args, **kwargs)
@@ -36,7 +36,7 @@ def funcThread(work_queue, tid=0, returnCodeQueue=None):
 
 def jobThread(work_queue, tid=0, returnCodeQueue=None, outputQueue=None):
     '''Runs command line jobs received from the work_queue'''
-    print('start thread')
+    # print('start thread')
     captureOutput = False
     if outputQueue is not None:
         captureOutput = True
@@ -100,7 +100,7 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
         if code != 0:
             raise RuntimeError(f"Exit code {code} for cmd: {cmdlist[i]}")
 
-    print("Complete")
+    # print("Complete")
     return
 
 

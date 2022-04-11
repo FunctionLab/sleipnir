@@ -7,12 +7,13 @@
 #include <stdexcept>
 #include "seekhelper.h"
 #include "databasei.h"
+#include "stdafx.h"
 
 using namespace std;
 namespace fs = std::filesystem;
 
 
-typedef struct {
+typedef struct _Args {
   char *inputDirList;
   char *dbFile;
   char *combinedDir;
@@ -73,6 +74,13 @@ int main(int argc, char** argv)
   if (res == false) {
     exit(-1);
   }
+
+  int logLevel = Priority::INFO;
+  if (args.verbose) {
+      logLevel = Priority::DEBUG;
+  }
+  CMeta Meta(logLevel);
+
   // input is 3 dblet names, orig1, orig2 and combined
   cout << "VerifyMergedDBFiles: " << args.inputDirList << " " << args.dbFile << " " << args.combinedDir << endl;
 
@@ -109,7 +117,7 @@ int main(int argc, char** argv)
   // Check num datasets match
   size_t numDatasetsCombined = dbletCombined.GetDatasets();
   if(numDatasets == numDatasetsCombined) {
-    printf("Num datasets match: %zu == %zu\n", numDatasets, numDatasetsCombined);
+    g_CatSleipnir().debug("Num datasets match: %zu == %zu", numDatasets, numDatasetsCombined);
   } else {
     printf("Num datasets don't match: %zu == %zu\n", numDatasets, numDatasetsCombined);
     exit(-1);
@@ -118,7 +126,7 @@ int main(int argc, char** argv)
   // Check size of datasets match
   size_t imgSizeCombined = dbletCombined.GetImageSize();
   if (imgSize == imgSizeCombined) {
-    printf("Gene image sizes match: %zu == %zu\n", imgSize, imgSizeCombined);
+    g_CatSleipnir().debug("Gene image sizes match: %zu == %zu\n", imgSize, imgSizeCombined);
   } else {
     printf("Gene image sizes don't match: %zu == %zu\n", imgSize, imgSizeCombined);
     exit(-1);
@@ -136,7 +144,7 @@ int main(int argc, char** argv)
       }
     }
   }
-  printf("Num genes in dbFile %s: %zu\n", args.dbFile, numDbletGenes);
+  g_CatSleipnir().debug("Num genes in dbFile %s: %zu\n", args.dbFile, numDbletGenes);
 
   // Loop through gene data and compare them, make sure the data isn't all 0xFF
     vector<unsigned char> data1, dataCombined;
