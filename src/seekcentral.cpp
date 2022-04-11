@@ -1304,6 +1304,8 @@ namespace Sleipnir {
                 current_sm = sm;*/
             //============================================
 
+            g_CatSleipnir().info("Processing Seek subquery: %d", i);
+
             if (m_mapLoadTime.find(i) != m_mapLoadTime.end()) {
                 if (!m_bRandom || l == 0) { //l==0: first random repetition
                     // load query genes into m_vc a vector of CSeekDatasets
