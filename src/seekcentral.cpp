@@ -10,10 +10,10 @@
 * which is authored and maintained by: Qian Zhu (qzhu@princeton.edu)
 *
 * If you use this file, please cite the following publication:
-* Qian Zhu, Aaron K Wong, Arjun Krishnan, Miriam R Aure, Alicja Tadych, 
-* Ran Zhang, David C Corney, Casey S Greene, Lars A Bongo, 
+* Qian Zhu, Aaron K Wong, Arjun Krishnan, Miriam R Aure, Alicja Tadych,
+* Ran Zhang, David C Corney, Casey S Greene, Lars A Bongo,
 * Vessela N Kristensen, Moses Charikar, Kai Li & Olga G Troyanskaya
-* "Targeted exploration and analysis of large cross-platform human 
+* "Targeted exploration and analysis of large cross-platform human
 * transcriptomic compendia" Nat Methods (2015)
 *
 * This file is a component of the Sleipnir library for functional genomics,
@@ -92,6 +92,8 @@ namespace Sleipnir {
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 10; //if checking for dataset size
+
+        m_fPercentDatasetCoverage = 0.5;
     }
 
     CSeekCentral::~CSeekCentral() {
@@ -129,6 +131,8 @@ namespace Sleipnir {
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 0;
+
+        m_fPercentDatasetCoverage = 0;
     }
 
     bool CSeekCentral::CalculateRestart() {
@@ -192,7 +196,8 @@ namespace Sleipnir {
             const float query_min_required, const float genome_min_required,
             const enum CSeekDataset::DistanceMeasure eDistMeasure,
             const bool bSubtractGeneAvg, const bool bNormPlatform,
-            const bool bNegativeCor, const bool bCheckDsetSize) {
+            const bool bNegativeCor, const bool bCheckDsetSize,
+            const float percentDatasetCoverage) {
 
         g_CatSleipnir().debug("InitializeQuery: Request received from client");
         assert(m_missingInitParams == false);
@@ -215,6 +220,7 @@ namespace Sleipnir {
         m_eDistMeasure = eDistMeasure;
         m_bCheckDsetSize = bCheckDsetSize;
         m_iNumSampleRequired = src->m_iNumSampleRequired;
+        m_fPercentDatasetCoverage = percentDatasetCoverage;
 
         //if negative correlation, then need to use a different null value
         m_bNegativeCor = bNegativeCor;
@@ -371,18 +377,22 @@ namespace Sleipnir {
 
         int maxGCoverage = GetMaxGenomeCoverage();
 
+        // iterate over queries
         for (l = 0; l < m_searchdsetMap.size(); l++) {
             utype iUserDatasets = m_searchdsetMap[l]->GetNumSet();
             const vector <utype> &allRDatasets = m_searchdsetMap[l]->GetAllReverse();
-            vector<int> count;
+            vector<int> count; // stores dataset counts per query gene
             CSeekTools::InitVector(count, m_vecstrAllQuery[l].size(), (int) 0);
             bool isFirst = true;
             //fprintf(stderr, "iUserDatasets %d\n", iUserDatasets);
 
+            // iterate over datasets
             for (dd = 0; dd < iUserDatasets; dd++) {
                 utype i = allRDatasets[dd];
                 CSeekIntIntMap *si = m_vc[i]->GetGeneMap();
-                utype present = 0;
+                utype present = 0; // total genes in dataset
+
+                // iterate over query genes, increment if gene is in dd
                 for (j = 0, present = 0; j < m_vecstrAllQuery[l].size(); j++) {
                     if (roAttr->m_mapstrintGene.find(m_vecstrAllQuery[l][j]) ==
                         roAttr->m_mapstrintGene.end())
@@ -411,6 +421,7 @@ namespace Sleipnir {
                                           (float) maxGCoverage);
 
                 //datasets containing some query genes (relaxed) [ 0 ]
+                // dataset dd contains enough query genes
                 if (present > 0 && present >= minRequired &&
                     si->GetNumSet() >= minGRequired) {
                     if (isFirst) {
@@ -423,14 +434,15 @@ namespace Sleipnir {
             }
 
             if (isFirst) {
-                string err = "Error: no dataset contains any of the query genes";
-                fprintf(stderr, "%s\n", err.c_str());
+                string err = "Error: no dataset contains enough query genes";
+                fprintf(stderr, "%s (%d)\n", err.c_str(), l);
                 if (m_bEnableNetwork) {
                     CSeekNetwork::Send(m_iClient, err);
                 } else if (m_useRPC) {
                     throw query_error(FILELINE + err);
                 }
-                return false;
+                if (m_vecstrAllQuery.size() == 1)
+                  return false;
             }
 
             if (l != m_searchdsetMap.size() - 1) {
@@ -438,13 +450,15 @@ namespace Sleipnir {
             }
 
             //fprintf(stderr, "ss %s\n", ss.str().c_str());
+
+            // iterate over query genes
             isFirst = true;
             for (j = 0; j < m_vecstrAllQuery[l].size(); j++) {
                 sq << m_vecstrAllQuery[l][j] << ":" << count[j];
                 if (j != m_vecstrAllQuery[l].size() - 1) {
                     sq << ";";
                 }
-                if (count[j] == 0) continue;
+                if (count[j] == 0) continue; // only add genes with datasets
                 if (isFirst) {
                     isFirst = false;
                     aq << m_vecstrAllQuery[l][j];
@@ -455,13 +469,14 @@ namespace Sleipnir {
 
             if (isFirst) {
                 string err = "Error: no dataset contains any of the query genes";
-                fprintf(stderr, "%s\n", err.c_str());
+                fprintf(stderr, "%s (%d)\n", err.c_str(), l);
                 if (m_bEnableNetwork) {
                     CSeekNetwork::Send(m_iClient, err);
                 } else if (m_useRPC) {
                     throw query_error(FILELINE + err);
                 }
-                return false;
+                if (m_vecstrAllQuery.size() == 1)
+                  return false;
             }
 
             if (l != m_searchdsetMap.size() - 1) {
@@ -476,6 +491,7 @@ namespace Sleipnir {
         string refinedQuery = aq.str();
         string refinedSearchDataset = ss.str();
         string refinedGeneCount = sq.str();
+
         if (m_bEnableNetwork) {
             CSeekNetwork::Send(m_iClient, refinedSearchDataset);
             CSeekNetwork::Send(m_iClient, refinedGeneCount);
@@ -501,6 +517,13 @@ namespace Sleipnir {
             //Change the search datasets
             vector <string> sd;
             CMeta::Tokenize(refinedSearchDataset.c_str(), sd, "|", false);
+
+            if (sd.size() != qq.size()) {
+              string err = "Error: dataset size and query size does not match";
+              fprintf(stderr, "%s\n", err.c_str());
+              return false;
+            }
+
             m_vecstrSearchDatasets.resize(sd.size());
             for (i = 0; i < sd.size(); i++) {
                 m_vecstrSearchDatasets[i] = vector<string>();
@@ -593,7 +616,8 @@ namespace Sleipnir {
                          true, //check dataset size (to be overwritten)
                          NULL,  // gsl_rng
                          useNibble,
-                         settings.numThreads);
+                         settings.numThreads,
+                         0.5);  // min percent datasets
         if (res == false) {
             throw init_error(FILELINE + "Seek Initialize");
         }
@@ -611,7 +635,7 @@ namespace Sleipnir {
                                   const float fPercentGenomeRequired,
                                   const bool bSquareZ, const bool bRandom, const int iNumRandom,
                                   const bool bNegativeCor, const bool bCheckDatasetSize,
-                                  gsl_rng *rand, const bool useNibble, const int numThreads) {
+                                  gsl_rng *rand, const bool useNibble, const int numThreads, float percentDatasetCoverage) {
 
         auto attr = make_shared<ReadOnlyAttributes>();
 
@@ -622,6 +646,7 @@ namespace Sleipnir {
         m_fPercentQueryAfterScoreCutOff = fPercentQueryRequired;
         m_fPercentGenomeRequired = fPercentGenomeRequired;
         m_bSquareZ = bSquareZ;
+        m_fPercentDatasetCoverage = percentDatasetCoverage;
 
         m_bNegativeCor = bNegativeCor;
         if (m_bNegativeCor) {
@@ -799,7 +824,7 @@ namespace Sleipnir {
         m_iGenes = attr->m_vecstrGenes.size();
 
         for (i = 0; i < vecDBSetting.size(); i++) {
-            if (vecDBSetting[i]->dbDir != "NA") { 
+            if (vecDBSetting[i]->dbDir != "NA") {
                 bool res;
                 res = m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
                                     attr->m_vecstrGenes, attr->m_vecDBDataset[i].size(),
@@ -836,14 +861,15 @@ namespace Sleipnir {
             const float fPercentQueryRequired, const float fPercentGenomeRequired,
             const bool bSquareZ, const bool bRandom, const int iNumRandom,
             const bool bNegativeCor, const bool bCheckDsetSize,
-            gsl_rng *rand, const bool useNibble, const int numThreads) {
+            gsl_rng *rand, const bool useNibble, const int numThreads,
+            const float percentDatasetCoverage) {
 
         if (!CSeekCentral::Initialize(vecDBSetting, buffer, to_output_text,
                                       bOutputWeightComponent, bSimulateWeight, dist_measure, bVariance,
                                       bSubtractAvg, bNormPlatform, bLogit, fCutOff,
                                       fPercentQueryRequired, fPercentGenomeRequired,
                                       bSquareZ, bRandom, iNumRandom, bNegativeCor, bCheckDsetSize,
-                                      rand, useNibble, numThreads)) {
+                                      rand, useNibble, numThreads, percentDatasetCoverage)) {
             return false;
         }
 
@@ -921,6 +947,7 @@ namespace Sleipnir {
             }
         }
 
+
         //fprintf(stderr, "Calculate restart...\n");
 
         if (!CalculateRestart()) {
@@ -928,6 +955,12 @@ namespace Sleipnir {
             return false;
         }
         //fprintf(stderr, "Finished CalculateRestart()\n");
+
+
+        if (!CheckDatasets(true)) { //replace parameter is true
+            fprintf(stderr, "Error occurred during CheckDatasets()\n");
+            return false;
+        }
 
         return true;
     }
@@ -1041,12 +1074,17 @@ namespace Sleipnir {
     bool CSeekCentral::FilterResults(const utype &iSearchDatasets) {
         utype j, k;
         bool DEBUG = false;
-        if (DEBUG) fprintf(stderr, "Aggregating genes\n");
+        if (DEBUG) {
+          fprintf(stderr, "Aggregating genes\n");
+          fprintf(stderr, "Searching %d dataasets\n", iSearchDatasets);
+        }
 
+        uint32_t minDatasets = (int)(m_fPercentDatasetCoverage * iSearchDatasets);
+        
         for (j = 0; j < m_iGenes; j++) {
             //TO DO: make K=(int)(0.5*iSearchDatasets) a customizable parameter
             //TO DO: perhaps it is better to use K=(int)(0.5*(max of m_counts[]))??
-            if (m_counts[j] < (int) (0.5 * iSearchDatasets))
+            if (m_counts[j] < minDatasets)
                 m_master_rank[j] = m_DEFAULT_NA;
             else if (m_sum_weight[j] == 0)
                 m_master_rank[j] = m_DEFAULT_NA;
@@ -1108,7 +1146,7 @@ namespace Sleipnir {
         }
         geneResult.resize(i);
     }
- 
+
     void CSeekCentral::setDatasetPairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedDatasetWeight) {
         vector<StrDoublePair> &datasetResult = this->m_datasetResults[queryIndex];
         uint32_t numDatasets = sortedDatasetWeight.size();
@@ -1914,4 +1952,3 @@ namespace Sleipnir {
         }
     }
 }
-

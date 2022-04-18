@@ -12,4 +12,4 @@ Makefile
 Makefile.*
 __pycache__/
 tests/test_output/
-
+Debug/
