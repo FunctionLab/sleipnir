@@ -100,19 +100,25 @@ int main(int iArgs, char **aszArgs) {
             "NA", // dataset size file, not needed for PCLServer
             99999 // num_db arg, argument not needed for PCLServer
     );
-    dbSetting->setPvalueDir(sArgs.random_dir_arg);
+    if (sArgs.random_dir_arg) {
+        dbSetting->setPvalueDir(sArgs.random_dir_arg);
+    }
     settings.dbs.push_back(dbSetting);
 
     CSeekCentral seekCentral;
     seekCentral.InitializeFromSeekConfig(settings);
     PValueData pvalueData;
-    if (sArgs.load_flag == 1) {
-        loadPvalueArrays(seekCentral.roAttr->m_vecDBSetting[0]->pvalueDir, pvalueData);
-    } else {
-        int numRandQueries = sArgs.random_num_arg;
-        initializePvalue(seekCentral, numRandQueries, pvalueData);
+    if (strMode == "genes") {
+        bool res = false;
+        if (sArgs.load_flag == 1) {
+            res = loadPvalueArrays(seekCentral.roAttr->m_vecDBSetting[0]->pvalueDir, pvalueData);
+        }
+        if (res == false) {
+            // Create pvalue arrays from the result files
+            int numRandQueries = sArgs.random_num_arg;
+            initializePvalue(seekCentral, numRandQueries, pvalueData);
+        }
     }
-
 
     //find a free port and attempt binding to the port
     int sockfd, new_fd;
