@@ -116,8 +116,11 @@ int main(int iArgs, char **aszArgs) {
         if (res == false) {
             // Create pvalue arrays from the result files
             int numRandQueries = sArgs.random_num_arg;
-            initializePvalue(seekCentral, numRandQueries, pvalueData);
+            initializeGenePvalue(seekCentral, numRandQueries, pvalueData);
         }
+    } else {
+        // datasets
+        initializeDatasetPvalue(seekCentral, sArgs.param_dir_arg, pvalueData);
     }
 
     //find a free port and attempt binding to the port

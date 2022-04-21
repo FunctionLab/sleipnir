@@ -41,7 +41,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
             res = loadPvalueArrays(pvalueDir, this->speciesPvalueData[speciesName]);
             if (res == false) {
                 // Try creating the metadata from the raw random score outputs
-                res = initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
+                res = initializeGenePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
                 if (res == false) {
                     // Disable pvalue queries for this species
                     cerr << "WARNING: PValue queries disabled for (" << speciesName;
