@@ -227,7 +227,7 @@ int main(int iArgs, char **aszArgs) {
             cerr << "Generating random negatives (" << (dNegatives * 100) << "%)" << endl;
             for (i = 0; i < Dat.GetGenes(); ++i)
                 for (j = (i + 1); j < Dat.GetGenes(); ++j)
-                    if (CMeta::IsNaN(Dat.Get(i, j)) && (((float) rand() / RAND_MAX) < dNegatives))
+                    if (CMeta::IsNaN(Dat.Get(i, j)) && (((float) rand() / (float) RAND_MAX) < dNegatives))
                         Dat.Set(i, j, 0);
         }
 

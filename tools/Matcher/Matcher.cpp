@@ -35,7 +35,7 @@ bool read_values(const CDat &Dat, size_t iMin, size_t iMax, vector<float> &vecdV
             iCount++;
             if (vecdValues.size() < iMax)
                 vecdValues.push_back(d);
-            else if (((float) rand() / RAND_MAX) < ((float) iMax / iCount))
+            else if (((float) rand() / (float) RAND_MAX) < ((float) iMax / iCount))
                 vecdValues[rand() % vecdValues.size()] = d;
         }
     if (!(i = vecdValues.size()))

@@ -2099,7 +2099,7 @@ namespace Sleipnir {
         dTest = (float) c_iTest / iValues;
         for (i = 0; i < GetGenes(); ++i)
             for (j = (i + 1); j < GetGenes(); ++j)
-                if (!CMeta::IsNaN(d = Get(i, j)) && (((float) rand() / RAND_MAX) < dTest))
+                if (!CMeta::IsNaN(d = Get(i, j)) && (((float) rand() / (float) RAND_MAX) < dTest))
                     setiTest.insert(d);
         fDiscrete = (setiTest.size() * 2) < c_iTest;
 
@@ -2137,7 +2137,7 @@ namespace Sleipnir {
             dTest = (float) vecdValues.capacity() / iValues;
             for (i = 0; i < GetGenes(); ++i)
                 for (j = (i + 1); j < GetGenes(); ++j)
-                    if (!CMeta::IsNaN(d = Get(i, j)) && (((float) rand() / RAND_MAX) < dTest))
+                    if (!CMeta::IsNaN(d = Get(i, j)) && (((float) rand() / (float) RAND_MAX) < dTest))
                         vecdValues.push_back(d);
             sort(vecdValues.begin(), vecdValues.end());
 
