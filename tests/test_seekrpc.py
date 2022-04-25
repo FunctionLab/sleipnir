@@ -462,7 +462,7 @@ class TestSeekRPC:
         resPvalues = np.array(result.pvalues, dtype=np.float32)
         # Given 1000 random queries used to build the pvalue tables, accuracy
         #  should only be to about .001.
-        isEquivalent = np.allclose(resPvalues, expectedScorePvalues, rtol=.05, atol=.001)
+        isEquivalent = np.allclose(resPvalues, expectedScorePvalues, rtol=.05, atol=.003)
         assert isEquivalent == True
 
         # Do the rank based pvalue query for all genes
@@ -481,7 +481,7 @@ class TestSeekRPC:
         # For some reason the gscores vary with each seek query run. I think because
         #  OMP makes it non-deterministic order float operations. I would think that
         #  absolute of .001 difference would work, but occassionally it is higher.
-        isEquivalent = np.allclose(resPvalues, expectedRankPvalues, rtol=.05, atol=.001)
+        isEquivalent = np.allclose(resPvalues, expectedRankPvalues, rtol=.05, atol=.003)
         assert isEquivalent == True
 
         # Next try running queries with a partial set of genes

@@ -1076,7 +1076,7 @@ namespace Sleipnir {
         bool DEBUG = false;
         if (DEBUG) {
           fprintf(stderr, "Aggregating genes\n");
-          fprintf(stderr, "Searching %d dataasets\n", iSearchDatasets);
+          fprintf(stderr, "Searching %d datasets\n", iSearchDatasets);
         }
 
         uint32_t minDatasets = (int)(m_fPercentDatasetCoverage * iSearchDatasets);
