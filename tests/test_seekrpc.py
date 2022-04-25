@@ -514,7 +514,7 @@ class TestSeekRPC:
         aba[aba < 0] = 0
         abab = aba / np.absolute(expectedScoreSample)
         print(f'Rank max reldiff is {np.nanmax(abab):.5f} at index {np.nanargmax(abab)}')
-        isEquivalent = np.allclose(resPvalues, expectedScoreSample, rtol=.05, atol=.001)
+        isEquivalent = np.allclose(resPvalues, expectedScoreSample, rtol=.05, atol=.003)
         assert isEquivalent == True
 
         # Do a pvalue rank query with the partial list of genes
