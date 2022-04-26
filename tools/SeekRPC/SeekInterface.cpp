@@ -311,7 +311,7 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
     }
 
     int networkConnection = 0;  // no direct network connection to client
-
+    float percentDatasetCoverage = 0.5;
     CSeekCentral querySC;
     querySC.setUsingRPC(true, log);
     bool res = querySC.InitializeQuery(query.outputDir,
@@ -325,7 +325,8 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
                                        bSubtractGeneAvg,
                                        bNormPlatform,
                                        params.useNegativeCorrelation,
-                                       params.checkDatasetSize);
+                                       params.checkDatasetSize,
+                                       percentDatasetCoverage);
     if (res == false) {
         result.success = false;
         result.status = QueryStatus::Error;
@@ -718,4 +719,3 @@ string getLogMessages(ThreadSafeQueue<string> &messageLog) {
     }
     return joinedMessages;
 }
-
