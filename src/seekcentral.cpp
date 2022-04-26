@@ -438,11 +438,7 @@ namespace Sleipnir {
                 fprintf(stderr, "%s (%d)\n", err.c_str(), l);
                 if (m_bEnableNetwork) {
                     CSeekNetwork::Send(m_iClient, err);
-                } else if (m_useRPC) {
-                    throw query_error(FILELINE + err);
                 }
-                if (m_vecstrAllQuery.size() == 1)
-                  return false;
             }
 
             if (l != m_searchdsetMap.size() - 1) {
@@ -472,11 +468,7 @@ namespace Sleipnir {
                 fprintf(stderr, "%s (%d)\n", err.c_str(), l);
                 if (m_bEnableNetwork) {
                     CSeekNetwork::Send(m_iClient, err);
-                } else if (m_useRPC) {
-                    throw query_error(FILELINE + err);
                 }
-                if (m_vecstrAllQuery.size() == 1)
-                  return false;
             }
 
             if (l != m_searchdsetMap.size() - 1) {
@@ -503,7 +495,7 @@ namespace Sleipnir {
         if (replace) {
             vector <string> qq;
             utype i;
-            CMeta::Tokenize(refinedQuery.c_str(), qq, "|", true);
+            CMeta::Tokenize(refinedQuery.c_str(), qq, "|", false);
             m_vecstrAllQuery.resize(qq.size());
             for (i = 0; i < qq.size(); i++) {
                 m_vecstrAllQuery[i].clear();
@@ -521,7 +513,7 @@ namespace Sleipnir {
             if (sd.size() != qq.size()) {
               string err = "Error: dataset size and query size does not match";
               fprintf(stderr, "%s\n", err.c_str());
-              return false;
+              throw query_error(err);
             }
 
             m_vecstrSearchDatasets.resize(sd.size());
@@ -1080,7 +1072,7 @@ namespace Sleipnir {
         }
 
         uint32_t minDatasets = (int)(m_fPercentDatasetCoverage * iSearchDatasets);
-        
+
         for (j = 0; j < m_iGenes; j++) {
             //TO DO: make K=(int)(0.5*iSearchDatasets) a customizable parameter
             //TO DO: perhaps it is better to use K=(int)(0.5*(max of m_counts[]))??
