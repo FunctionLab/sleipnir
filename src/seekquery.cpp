@@ -109,6 +109,9 @@ namespace Sleipnir {
             return false;
         }
         qSize = queryGenes.size();
+	if (qSize == 0) {
+            return true;
+	}
         utype fold_size = 0;
         utype iFoldx = iFold;
         if (CSeekTools::IsNaN(iFold)) {
