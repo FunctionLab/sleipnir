@@ -1472,6 +1472,11 @@ void PclResult::__set_datasetSizes(const std::vector<int32_t> & val) {
   this->datasetSizes = val;
 }
 
+void PclResult::__set_experimentNames(const std::vector<std::string> & val) {
+  this->experimentNames = val;
+__isset.experimentNames = true;
+}
+
 void PclResult::__set_geneExpressions(const std::vector<double> & val) {
   this->geneExpressions = val;
 __isset.geneExpressions = true;
@@ -1562,15 +1567,35 @@ uint32_t PclResult::read(::apache::thrift::protocol::TProtocol* iprot) {
       case 3:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
-            this->geneExpressions.clear();
+            this->experimentNames.clear();
             uint32_t _size68;
             ::apache::thrift::protocol::TType _etype71;
             xfer += iprot->readListBegin(_etype71, _size68);
-            this->geneExpressions.resize(_size68);
+            this->experimentNames.resize(_size68);
             uint32_t _i72;
             for (_i72 = 0; _i72 < _size68; ++_i72)
             {
-              xfer += iprot->readDouble(this->geneExpressions[_i72]);
+              xfer += iprot->readString(this->experimentNames[_i72]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.experimentNames = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->geneExpressions.clear();
+            uint32_t _size73;
+            ::apache::thrift::protocol::TType _etype76;
+            xfer += iprot->readListBegin(_etype76, _size73);
+            this->geneExpressions.resize(_size73);
+            uint32_t _i77;
+            for (_i77 = 0; _i77 < _size73; ++_i77)
+            {
+              xfer += iprot->readDouble(this->geneExpressions[_i77]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1579,18 +1604,18 @@ uint32_t PclResult::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 4:
+      case 5:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->geneCoexpressions.clear();
-            uint32_t _size73;
-            ::apache::thrift::protocol::TType _etype76;
-            xfer += iprot->readListBegin(_etype76, _size73);
-            this->geneCoexpressions.resize(_size73);
-            uint32_t _i77;
-            for (_i77 = 0; _i77 < _size73; ++_i77)
+            uint32_t _size78;
+            ::apache::thrift::protocol::TType _etype81;
+            xfer += iprot->readListBegin(_etype81, _size78);
+            this->geneCoexpressions.resize(_size78);
+            uint32_t _i82;
+            for (_i82 = 0; _i82 < _size78; ++_i82)
             {
-              xfer += iprot->readDouble(this->geneCoexpressions[_i77]);
+              xfer += iprot->readDouble(this->geneCoexpressions[_i82]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1599,18 +1624,18 @@ uint32_t PclResult::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 5:
+      case 6:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->queryExpressions.clear();
-            uint32_t _size78;
-            ::apache::thrift::protocol::TType _etype81;
-            xfer += iprot->readListBegin(_etype81, _size78);
-            this->queryExpressions.resize(_size78);
-            uint32_t _i82;
-            for (_i82 = 0; _i82 < _size78; ++_i82)
+            uint32_t _size83;
+            ::apache::thrift::protocol::TType _etype86;
+            xfer += iprot->readListBegin(_etype86, _size83);
+            this->queryExpressions.resize(_size83);
+            uint32_t _i87;
+            for (_i87 = 0; _i87 < _size83; ++_i87)
             {
-              xfer += iprot->readDouble(this->queryExpressions[_i82]);
+              xfer += iprot->readDouble(this->queryExpressions[_i87]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1619,18 +1644,18 @@ uint32_t PclResult::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 6:
+      case 7:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->queryCoexpressions.clear();
-            uint32_t _size83;
-            ::apache::thrift::protocol::TType _etype86;
-            xfer += iprot->readListBegin(_etype86, _size83);
-            this->queryCoexpressions.resize(_size83);
-            uint32_t _i87;
-            for (_i87 = 0; _i87 < _size83; ++_i87)
+            uint32_t _size88;
+            ::apache::thrift::protocol::TType _etype91;
+            xfer += iprot->readListBegin(_etype91, _size88);
+            this->queryCoexpressions.resize(_size88);
+            uint32_t _i92;
+            for (_i92 = 0; _i92 < _size88; ++_i92)
             {
-              xfer += iprot->readDouble(this->queryCoexpressions[_i87]);
+              xfer += iprot->readDouble(this->queryCoexpressions[_i92]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1639,17 +1664,17 @@ uint32_t PclResult::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 7:
+      case 8:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast88;
-          xfer += iprot->readI32(ecast88);
-          this->status = static_cast<QueryStatus::type>(ecast88);
+          int32_t ecast93;
+          xfer += iprot->readI32(ecast93);
+          this->status = static_cast<QueryStatus::type>(ecast93);
           this->__isset.status = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 8:
+      case 9:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
           xfer += iprot->readString(this->statusMsg);
           this->__isset.statusMsg = true;
@@ -1685,74 +1710,87 @@ uint32_t PclResult::write(::apache::thrift::protocol::TProtocol* oprot) const {
   xfer += oprot->writeFieldBegin("datasetSizes", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->datasetSizes.size()));
-    std::vector<int32_t> ::const_iterator _iter89;
-    for (_iter89 = this->datasetSizes.begin(); _iter89 != this->datasetSizes.end(); ++_iter89)
+    std::vector<int32_t> ::const_iterator _iter94;
+    for (_iter94 = this->datasetSizes.begin(); _iter94 != this->datasetSizes.end(); ++_iter94)
     {
-      xfer += oprot->writeI32((*_iter89));
+      xfer += oprot->writeI32((*_iter94));
     }
     xfer += oprot->writeListEnd();
   }
   xfer += oprot->writeFieldEnd();
 
+  if (this->__isset.experimentNames) {
+    xfer += oprot->writeFieldBegin("experimentNames", ::apache::thrift::protocol::T_LIST, 3);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->experimentNames.size()));
+      std::vector<std::string> ::const_iterator _iter95;
+      for (_iter95 = this->experimentNames.begin(); _iter95 != this->experimentNames.end(); ++_iter95)
+      {
+        xfer += oprot->writeString((*_iter95));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.geneExpressions) {
-    xfer += oprot->writeFieldBegin("geneExpressions", ::apache::thrift::protocol::T_LIST, 3);
+    xfer += oprot->writeFieldBegin("geneExpressions", ::apache::thrift::protocol::T_LIST, 4);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->geneExpressions.size()));
-      std::vector<double> ::const_iterator _iter90;
-      for (_iter90 = this->geneExpressions.begin(); _iter90 != this->geneExpressions.end(); ++_iter90)
+      std::vector<double> ::const_iterator _iter96;
+      for (_iter96 = this->geneExpressions.begin(); _iter96 != this->geneExpressions.end(); ++_iter96)
       {
-        xfer += oprot->writeDouble((*_iter90));
+        xfer += oprot->writeDouble((*_iter96));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.geneCoexpressions) {
-    xfer += oprot->writeFieldBegin("geneCoexpressions", ::apache::thrift::protocol::T_LIST, 4);
+    xfer += oprot->writeFieldBegin("geneCoexpressions", ::apache::thrift::protocol::T_LIST, 5);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->geneCoexpressions.size()));
-      std::vector<double> ::const_iterator _iter91;
-      for (_iter91 = this->geneCoexpressions.begin(); _iter91 != this->geneCoexpressions.end(); ++_iter91)
+      std::vector<double> ::const_iterator _iter97;
+      for (_iter97 = this->geneCoexpressions.begin(); _iter97 != this->geneCoexpressions.end(); ++_iter97)
       {
-        xfer += oprot->writeDouble((*_iter91));
+        xfer += oprot->writeDouble((*_iter97));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.queryExpressions) {
-    xfer += oprot->writeFieldBegin("queryExpressions", ::apache::thrift::protocol::T_LIST, 5);
+    xfer += oprot->writeFieldBegin("queryExpressions", ::apache::thrift::protocol::T_LIST, 6);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->queryExpressions.size()));
-      std::vector<double> ::const_iterator _iter92;
-      for (_iter92 = this->queryExpressions.begin(); _iter92 != this->queryExpressions.end(); ++_iter92)
+      std::vector<double> ::const_iterator _iter98;
+      for (_iter98 = this->queryExpressions.begin(); _iter98 != this->queryExpressions.end(); ++_iter98)
       {
-        xfer += oprot->writeDouble((*_iter92));
+        xfer += oprot->writeDouble((*_iter98));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.queryCoexpressions) {
-    xfer += oprot->writeFieldBegin("queryCoexpressions", ::apache::thrift::protocol::T_LIST, 6);
+    xfer += oprot->writeFieldBegin("queryCoexpressions", ::apache::thrift::protocol::T_LIST, 7);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->queryCoexpressions.size()));
-      std::vector<double> ::const_iterator _iter93;
-      for (_iter93 = this->queryCoexpressions.begin(); _iter93 != this->queryCoexpressions.end(); ++_iter93)
+      std::vector<double> ::const_iterator _iter99;
+      for (_iter99 = this->queryCoexpressions.begin(); _iter99 != this->queryCoexpressions.end(); ++_iter99)
       {
-        xfer += oprot->writeDouble((*_iter93));
+        xfer += oprot->writeDouble((*_iter99));
       }
       xfer += oprot->writeListEnd();
     }
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.status) {
-    xfer += oprot->writeFieldBegin("status", ::apache::thrift::protocol::T_I32, 7);
+    xfer += oprot->writeFieldBegin("status", ::apache::thrift::protocol::T_I32, 8);
     xfer += oprot->writeI32(static_cast<int32_t>(this->status));
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.statusMsg) {
-    xfer += oprot->writeFieldBegin("statusMsg", ::apache::thrift::protocol::T_STRING, 8);
+    xfer += oprot->writeFieldBegin("statusMsg", ::apache::thrift::protocol::T_STRING, 9);
     xfer += oprot->writeString(this->statusMsg);
     xfer += oprot->writeFieldEnd();
   }
@@ -1765,6 +1803,7 @@ void swap(PclResult &a, PclResult &b) {
   using ::std::swap;
   swap(a.success, b.success);
   swap(a.datasetSizes, b.datasetSizes);
+  swap(a.experimentNames, b.experimentNames);
   swap(a.geneExpressions, b.geneExpressions);
   swap(a.geneCoexpressions, b.geneCoexpressions);
   swap(a.queryExpressions, b.queryExpressions);
@@ -1774,27 +1813,29 @@ void swap(PclResult &a, PclResult &b) {
   swap(a.__isset, b.__isset);
 }
 
-PclResult::PclResult(const PclResult& other94) {
-  success = other94.success;
-  datasetSizes = other94.datasetSizes;
-  geneExpressions = other94.geneExpressions;
-  geneCoexpressions = other94.geneCoexpressions;
-  queryExpressions = other94.queryExpressions;
-  queryCoexpressions = other94.queryCoexpressions;
-  status = other94.status;
-  statusMsg = other94.statusMsg;
-  __isset = other94.__isset;
+PclResult::PclResult(const PclResult& other100) {
+  success = other100.success;
+  datasetSizes = other100.datasetSizes;
+  experimentNames = other100.experimentNames;
+  geneExpressions = other100.geneExpressions;
+  geneCoexpressions = other100.geneCoexpressions;
+  queryExpressions = other100.queryExpressions;
+  queryCoexpressions = other100.queryCoexpressions;
+  status = other100.status;
+  statusMsg = other100.statusMsg;
+  __isset = other100.__isset;
 }
-PclResult& PclResult::operator=(const PclResult& other95) {
-  success = other95.success;
-  datasetSizes = other95.datasetSizes;
-  geneExpressions = other95.geneExpressions;
-  geneCoexpressions = other95.geneCoexpressions;
-  queryExpressions = other95.queryExpressions;
-  queryCoexpressions = other95.queryCoexpressions;
-  status = other95.status;
-  statusMsg = other95.statusMsg;
-  __isset = other95.__isset;
+PclResult& PclResult::operator=(const PclResult& other101) {
+  success = other101.success;
+  datasetSizes = other101.datasetSizes;
+  experimentNames = other101.experimentNames;
+  geneExpressions = other101.geneExpressions;
+  geneCoexpressions = other101.geneCoexpressions;
+  queryExpressions = other101.queryExpressions;
+  queryCoexpressions = other101.queryCoexpressions;
+  status = other101.status;
+  statusMsg = other101.statusMsg;
+  __isset = other101.__isset;
   return *this;
 }
 void PclResult::printTo(std::ostream& out) const {
@@ -1802,6 +1843,7 @@ void PclResult::printTo(std::ostream& out) const {
   out << "PclResult(";
   out << "success=" << to_string(success);
   out << ", " << "datasetSizes=" << to_string(datasetSizes);
+  out << ", " << "experimentNames="; (__isset.experimentNames ? (out << to_string(experimentNames)) : (out << "<null>"));
   out << ", " << "geneExpressions="; (__isset.geneExpressions ? (out << to_string(geneExpressions)) : (out << "<null>"));
   out << ", " << "geneCoexpressions="; (__isset.geneCoexpressions ? (out << to_string(geneCoexpressions)) : (out << "<null>"));
   out << ", " << "queryExpressions="; (__isset.queryExpressions ? (out << to_string(queryExpressions)) : (out << "<null>"));
@@ -1880,14 +1922,14 @@ uint32_t PValueGeneArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->genes.clear();
-            uint32_t _size96;
-            ::apache::thrift::protocol::TType _etype99;
-            xfer += iprot->readListBegin(_etype99, _size96);
-            this->genes.resize(_size96);
-            uint32_t _i100;
-            for (_i100 = 0; _i100 < _size96; ++_i100)
+            uint32_t _size102;
+            ::apache::thrift::protocol::TType _etype105;
+            xfer += iprot->readListBegin(_etype105, _size102);
+            this->genes.resize(_size102);
+            uint32_t _i106;
+            for (_i106 = 0; _i106 < _size102; ++_i106)
             {
-              xfer += iprot->readString(this->genes[_i100]);
+              xfer += iprot->readString(this->genes[_i106]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1900,14 +1942,14 @@ uint32_t PValueGeneArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->geneScores.clear();
-            uint32_t _size101;
-            ::apache::thrift::protocol::TType _etype104;
-            xfer += iprot->readListBegin(_etype104, _size101);
-            this->geneScores.resize(_size101);
-            uint32_t _i105;
-            for (_i105 = 0; _i105 < _size101; ++_i105)
+            uint32_t _size107;
+            ::apache::thrift::protocol::TType _etype110;
+            xfer += iprot->readListBegin(_etype110, _size107);
+            this->geneScores.resize(_size107);
+            uint32_t _i111;
+            for (_i111 = 0; _i111 < _size107; ++_i111)
             {
-              xfer += iprot->readDouble(this->geneScores[_i105]);
+              xfer += iprot->readDouble(this->geneScores[_i111]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1920,14 +1962,14 @@ uint32_t PValueGeneArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->geneRanks.clear();
-            uint32_t _size106;
-            ::apache::thrift::protocol::TType _etype109;
-            xfer += iprot->readListBegin(_etype109, _size106);
-            this->geneRanks.resize(_size106);
-            uint32_t _i110;
-            for (_i110 = 0; _i110 < _size106; ++_i110)
+            uint32_t _size112;
+            ::apache::thrift::protocol::TType _etype115;
+            xfer += iprot->readListBegin(_etype115, _size112);
+            this->geneRanks.resize(_size112);
+            uint32_t _i116;
+            for (_i116 = 0; _i116 < _size112; ++_i116)
             {
-              xfer += iprot->readI32(this->geneRanks[_i110]);
+              xfer += iprot->readI32(this->geneRanks[_i116]);
             }
             xfer += iprot->readListEnd();
           }
@@ -1971,10 +2013,10 @@ uint32_t PValueGeneArgs::write(::apache::thrift::protocol::TProtocol* oprot) con
     xfer += oprot->writeFieldBegin("genes", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->genes.size()));
-      std::vector<std::string> ::const_iterator _iter111;
-      for (_iter111 = this->genes.begin(); _iter111 != this->genes.end(); ++_iter111)
+      std::vector<std::string> ::const_iterator _iter117;
+      for (_iter117 = this->genes.begin(); _iter117 != this->genes.end(); ++_iter117)
       {
-        xfer += oprot->writeString((*_iter111));
+        xfer += oprot->writeString((*_iter117));
       }
       xfer += oprot->writeListEnd();
     }
@@ -1984,10 +2026,10 @@ uint32_t PValueGeneArgs::write(::apache::thrift::protocol::TProtocol* oprot) con
     xfer += oprot->writeFieldBegin("geneScores", ::apache::thrift::protocol::T_LIST, 3);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->geneScores.size()));
-      std::vector<double> ::const_iterator _iter112;
-      for (_iter112 = this->geneScores.begin(); _iter112 != this->geneScores.end(); ++_iter112)
+      std::vector<double> ::const_iterator _iter118;
+      for (_iter118 = this->geneScores.begin(); _iter118 != this->geneScores.end(); ++_iter118)
       {
-        xfer += oprot->writeDouble((*_iter112));
+        xfer += oprot->writeDouble((*_iter118));
       }
       xfer += oprot->writeListEnd();
     }
@@ -1997,10 +2039,10 @@ uint32_t PValueGeneArgs::write(::apache::thrift::protocol::TProtocol* oprot) con
     xfer += oprot->writeFieldBegin("geneRanks", ::apache::thrift::protocol::T_LIST, 4);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->geneRanks.size()));
-      std::vector<int32_t> ::const_iterator _iter113;
-      for (_iter113 = this->geneRanks.begin(); _iter113 != this->geneRanks.end(); ++_iter113)
+      std::vector<int32_t> ::const_iterator _iter119;
+      for (_iter119 = this->geneRanks.begin(); _iter119 != this->geneRanks.end(); ++_iter119)
       {
-        xfer += oprot->writeI32((*_iter113));
+        xfer += oprot->writeI32((*_iter119));
       }
       xfer += oprot->writeListEnd();
     }
@@ -2026,21 +2068,21 @@ void swap(PValueGeneArgs &a, PValueGeneArgs &b) {
   swap(a.__isset, b.__isset);
 }
 
-PValueGeneArgs::PValueGeneArgs(const PValueGeneArgs& other114) {
-  species = other114.species;
-  genes = other114.genes;
-  geneScores = other114.geneScores;
-  geneRanks = other114.geneRanks;
-  useRank = other114.useRank;
-  __isset = other114.__isset;
+PValueGeneArgs::PValueGeneArgs(const PValueGeneArgs& other120) {
+  species = other120.species;
+  genes = other120.genes;
+  geneScores = other120.geneScores;
+  geneRanks = other120.geneRanks;
+  useRank = other120.useRank;
+  __isset = other120.__isset;
 }
-PValueGeneArgs& PValueGeneArgs::operator=(const PValueGeneArgs& other115) {
-  species = other115.species;
-  genes = other115.genes;
-  geneScores = other115.geneScores;
-  geneRanks = other115.geneRanks;
-  useRank = other115.useRank;
-  __isset = other115.__isset;
+PValueGeneArgs& PValueGeneArgs::operator=(const PValueGeneArgs& other121) {
+  species = other121.species;
+  genes = other121.genes;
+  geneScores = other121.geneScores;
+  geneRanks = other121.geneRanks;
+  useRank = other121.useRank;
+  __isset = other121.__isset;
   return *this;
 }
 void PValueGeneArgs::printTo(std::ostream& out) const {
@@ -2113,14 +2155,14 @@ uint32_t PValueDatasetArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->datasets.clear();
-            uint32_t _size116;
-            ::apache::thrift::protocol::TType _etype119;
-            xfer += iprot->readListBegin(_etype119, _size116);
-            this->datasets.resize(_size116);
-            uint32_t _i120;
-            for (_i120 = 0; _i120 < _size116; ++_i120)
+            uint32_t _size122;
+            ::apache::thrift::protocol::TType _etype125;
+            xfer += iprot->readListBegin(_etype125, _size122);
+            this->datasets.resize(_size122);
+            uint32_t _i126;
+            for (_i126 = 0; _i126 < _size122; ++_i126)
             {
-              xfer += iprot->readString(this->datasets[_i120]);
+              xfer += iprot->readString(this->datasets[_i126]);
             }
             xfer += iprot->readListEnd();
           }
@@ -2133,14 +2175,14 @@ uint32_t PValueDatasetArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->datasetWeights.clear();
-            uint32_t _size121;
-            ::apache::thrift::protocol::TType _etype124;
-            xfer += iprot->readListBegin(_etype124, _size121);
-            this->datasetWeights.resize(_size121);
-            uint32_t _i125;
-            for (_i125 = 0; _i125 < _size121; ++_i125)
+            uint32_t _size127;
+            ::apache::thrift::protocol::TType _etype130;
+            xfer += iprot->readListBegin(_etype130, _size127);
+            this->datasetWeights.resize(_size127);
+            uint32_t _i131;
+            for (_i131 = 0; _i131 < _size127; ++_i131)
             {
-              xfer += iprot->readDouble(this->datasetWeights[_i125]);
+              xfer += iprot->readDouble(this->datasetWeights[_i131]);
             }
             xfer += iprot->readListEnd();
           }
@@ -2176,10 +2218,10 @@ uint32_t PValueDatasetArgs::write(::apache::thrift::protocol::TProtocol* oprot) 
     xfer += oprot->writeFieldBegin("datasets", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->datasets.size()));
-      std::vector<std::string> ::const_iterator _iter126;
-      for (_iter126 = this->datasets.begin(); _iter126 != this->datasets.end(); ++_iter126)
+      std::vector<std::string> ::const_iterator _iter132;
+      for (_iter132 = this->datasets.begin(); _iter132 != this->datasets.end(); ++_iter132)
       {
-        xfer += oprot->writeString((*_iter126));
+        xfer += oprot->writeString((*_iter132));
       }
       xfer += oprot->writeListEnd();
     }
@@ -2189,10 +2231,10 @@ uint32_t PValueDatasetArgs::write(::apache::thrift::protocol::TProtocol* oprot) 
     xfer += oprot->writeFieldBegin("datasetWeights", ::apache::thrift::protocol::T_LIST, 3);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->datasetWeights.size()));
-      std::vector<double> ::const_iterator _iter127;
-      for (_iter127 = this->datasetWeights.begin(); _iter127 != this->datasetWeights.end(); ++_iter127)
+      std::vector<double> ::const_iterator _iter133;
+      for (_iter133 = this->datasetWeights.begin(); _iter133 != this->datasetWeights.end(); ++_iter133)
       {
-        xfer += oprot->writeDouble((*_iter127));
+        xfer += oprot->writeDouble((*_iter133));
       }
       xfer += oprot->writeListEnd();
     }
@@ -2211,17 +2253,17 @@ void swap(PValueDatasetArgs &a, PValueDatasetArgs &b) {
   swap(a.__isset, b.__isset);
 }
 
-PValueDatasetArgs::PValueDatasetArgs(const PValueDatasetArgs& other128) {
-  species = other128.species;
-  datasets = other128.datasets;
-  datasetWeights = other128.datasetWeights;
-  __isset = other128.__isset;
+PValueDatasetArgs::PValueDatasetArgs(const PValueDatasetArgs& other134) {
+  species = other134.species;
+  datasets = other134.datasets;
+  datasetWeights = other134.datasetWeights;
+  __isset = other134.__isset;
 }
-PValueDatasetArgs& PValueDatasetArgs::operator=(const PValueDatasetArgs& other129) {
-  species = other129.species;
-  datasets = other129.datasets;
-  datasetWeights = other129.datasetWeights;
-  __isset = other129.__isset;
+PValueDatasetArgs& PValueDatasetArgs::operator=(const PValueDatasetArgs& other135) {
+  species = other135.species;
+  datasets = other135.datasets;
+  datasetWeights = other135.datasetWeights;
+  __isset = other135.__isset;
   return *this;
 }
 void PValueDatasetArgs::printTo(std::ostream& out) const {
@@ -2297,14 +2339,14 @@ uint32_t PValueResult::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->pvalues.clear();
-            uint32_t _size130;
-            ::apache::thrift::protocol::TType _etype133;
-            xfer += iprot->readListBegin(_etype133, _size130);
-            this->pvalues.resize(_size130);
-            uint32_t _i134;
-            for (_i134 = 0; _i134 < _size130; ++_i134)
+            uint32_t _size136;
+            ::apache::thrift::protocol::TType _etype139;
+            xfer += iprot->readListBegin(_etype139, _size136);
+            this->pvalues.resize(_size136);
+            uint32_t _i140;
+            for (_i140 = 0; _i140 < _size136; ++_i140)
             {
-              xfer += iprot->readDouble(this->pvalues[_i134]);
+              xfer += iprot->readDouble(this->pvalues[_i140]);
             }
             xfer += iprot->readListEnd();
           }
@@ -2315,9 +2357,9 @@ uint32_t PValueResult::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 3:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast135;
-          xfer += iprot->readI32(ecast135);
-          this->status = static_cast<QueryStatus::type>(ecast135);
+          int32_t ecast141;
+          xfer += iprot->readI32(ecast141);
+          this->status = static_cast<QueryStatus::type>(ecast141);
           this->__isset.status = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -2358,10 +2400,10 @@ uint32_t PValueResult::write(::apache::thrift::protocol::TProtocol* oprot) const
     xfer += oprot->writeFieldBegin("pvalues", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->pvalues.size()));
-      std::vector<double> ::const_iterator _iter136;
-      for (_iter136 = this->pvalues.begin(); _iter136 != this->pvalues.end(); ++_iter136)
+      std::vector<double> ::const_iterator _iter142;
+      for (_iter142 = this->pvalues.begin(); _iter142 != this->pvalues.end(); ++_iter142)
       {
-        xfer += oprot->writeDouble((*_iter136));
+        xfer += oprot->writeDouble((*_iter142));
       }
       xfer += oprot->writeListEnd();
     }
@@ -2391,19 +2433,19 @@ void swap(PValueResult &a, PValueResult &b) {
   swap(a.__isset, b.__isset);
 }
 
-PValueResult::PValueResult(const PValueResult& other137) {
-  success = other137.success;
-  pvalues = other137.pvalues;
-  status = other137.status;
-  statusMsg = other137.statusMsg;
-  __isset = other137.__isset;
+PValueResult::PValueResult(const PValueResult& other143) {
+  success = other143.success;
+  pvalues = other143.pvalues;
+  status = other143.status;
+  statusMsg = other143.statusMsg;
+  __isset = other143.__isset;
 }
-PValueResult& PValueResult::operator=(const PValueResult& other138) {
-  success = other138.success;
-  pvalues = other138.pvalues;
-  status = other138.status;
-  statusMsg = other138.statusMsg;
-  __isset = other138.__isset;
+PValueResult& PValueResult::operator=(const PValueResult& other144) {
+  success = other144.success;
+  pvalues = other144.pvalues;
+  status = other144.status;
+  statusMsg = other144.statusMsg;
+  __isset = other144.__isset;
   return *this;
 }
 void PValueResult::printTo(std::ostream& out) const {

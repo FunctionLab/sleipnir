@@ -136,7 +136,7 @@ int main(int argc, char **argv)
         pclQueryArgs.species = args.species;
         pclQueryArgs.__isset.settings = true;
         pclQueryArgs.settings.__set_outputGeneExpression(true);
-        pclQueryArgs.settings.__set_outputNormalized(true);
+        pclQueryArgs.settings.__set_outputNormalized(false);
         pclQueryArgs.settings.__set_rbp(-1);
         // query.settings.__set_outputGeneCoexpression(true);
         // query.settings.__set_outputQueryExpression(true);
@@ -152,17 +152,27 @@ int main(int argc, char **argv)
 
         int numDatasets = args.datasets.size();
         int numGenes = args.genes.size();
-        int offset = 0;
+        int geneRowOffset = 0;
+        int expNameOffset = 0;
         for (int i=0; i<numDatasets; i++) {
+            cout << "Dataset: " << args.datasets[i] << endl;
+            int numSamples = result.datasetSizes[i];
+            // Print experiment (sample) names
+            for (int j=0; j<numSamples; j++) {
+                cout << result.experimentNames[expNameOffset + j] << "  ";
+            }
+            cout << endl;
+            expNameOffset += numSamples;
+            // Print gene expression values
             for (int j=0; j<numGenes; j++) {
-                cout << "dset: " << i << ", gene: " << j << endl;
-                int numSamples = result.datasetSizes[i];
+                cout << "Gene " << args.genes[j] << ": ";
                 for(int k=0; k<numSamples; k++) {
                     // Can't use offset calculation because each dataseSize is different
-                    // int offset = k + j*datasetSize + i*datasetSize*numGenes; 
-                    cout << "val: " << result.geneExpressions[offset] << endl;
-                    offset++;
+                    // i.e. not: int offset = k + j*datasetSize + i*datasetSize*numGenes;
+                    cout << result.geneExpressions[geneRowOffset + k] << " ";
                 }
+                cout << endl;
+                geneRowOffset += numSamples;
             }
         }
         if (!args.outputFile.empty()) {

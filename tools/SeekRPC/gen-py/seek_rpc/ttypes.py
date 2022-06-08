@@ -812,6 +812,7 @@ class PclResult(object):
     Attributes:
      - success
      - datasetSizes
+     - experimentNames
      - geneExpressions
      - geneCoexpressions
      - queryExpressions
@@ -822,9 +823,10 @@ class PclResult(object):
     """
 
 
-    def __init__(self, success=None, datasetSizes=None, geneExpressions=None, geneCoexpressions=None, queryExpressions=None, queryCoexpressions=None, status=None, statusMsg=None,):
+    def __init__(self, success=None, datasetSizes=None, experimentNames=None, geneExpressions=None, geneCoexpressions=None, queryExpressions=None, queryCoexpressions=None, status=None, statusMsg=None,):
         self.success = success
         self.datasetSizes = datasetSizes
+        self.experimentNames = experimentNames
         self.geneExpressions = geneExpressions
         self.geneCoexpressions = geneCoexpressions
         self.queryExpressions = queryExpressions
@@ -858,50 +860,60 @@ class PclResult(object):
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
-                    self.geneExpressions = []
+                    self.experimentNames = []
                     (_etype65, _size62) = iprot.readListBegin()
                     for _i66 in range(_size62):
-                        _elem67 = iprot.readDouble()
-                        self.geneExpressions.append(_elem67)
+                        _elem67 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.experimentNames.append(_elem67)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.LIST:
-                    self.geneCoexpressions = []
+                    self.geneExpressions = []
                     (_etype71, _size68) = iprot.readListBegin()
                     for _i72 in range(_size68):
                         _elem73 = iprot.readDouble()
-                        self.geneCoexpressions.append(_elem73)
+                        self.geneExpressions.append(_elem73)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
                 if ftype == TType.LIST:
-                    self.queryExpressions = []
+                    self.geneCoexpressions = []
                     (_etype77, _size74) = iprot.readListBegin()
                     for _i78 in range(_size74):
                         _elem79 = iprot.readDouble()
-                        self.queryExpressions.append(_elem79)
+                        self.geneCoexpressions.append(_elem79)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 6:
                 if ftype == TType.LIST:
-                    self.queryCoexpressions = []
+                    self.queryExpressions = []
                     (_etype83, _size80) = iprot.readListBegin()
                     for _i84 in range(_size80):
                         _elem85 = iprot.readDouble()
-                        self.queryCoexpressions.append(_elem85)
+                        self.queryExpressions.append(_elem85)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 7:
+                if ftype == TType.LIST:
+                    self.queryCoexpressions = []
+                    (_etype89, _size86) = iprot.readListBegin()
+                    for _i90 in range(_size86):
+                        _elem91 = iprot.readDouble()
+                        self.queryCoexpressions.append(_elem91)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
                 if ftype == TType.I32:
                     self.status = iprot.readI32()
                 else:
                     iprot.skip(ftype)
-            elif fid == 8:
+            elif fid == 9:
                 if ftype == TType.STRING:
                     self.statusMsg = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -923,44 +935,51 @@ class PclResult(object):
         if self.datasetSizes is not None:
             oprot.writeFieldBegin('datasetSizes', TType.LIST, 2)
             oprot.writeListBegin(TType.I32, len(self.datasetSizes))
-            for iter86 in self.datasetSizes:
-                oprot.writeI32(iter86)
+            for iter92 in self.datasetSizes:
+                oprot.writeI32(iter92)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.experimentNames is not None:
+            oprot.writeFieldBegin('experimentNames', TType.LIST, 3)
+            oprot.writeListBegin(TType.STRING, len(self.experimentNames))
+            for iter93 in self.experimentNames:
+                oprot.writeString(iter93.encode('utf-8') if sys.version_info[0] == 2 else iter93)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.geneExpressions is not None:
-            oprot.writeFieldBegin('geneExpressions', TType.LIST, 3)
+            oprot.writeFieldBegin('geneExpressions', TType.LIST, 4)
             oprot.writeListBegin(TType.DOUBLE, len(self.geneExpressions))
-            for iter87 in self.geneExpressions:
-                oprot.writeDouble(iter87)
+            for iter94 in self.geneExpressions:
+                oprot.writeDouble(iter94)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.geneCoexpressions is not None:
-            oprot.writeFieldBegin('geneCoexpressions', TType.LIST, 4)
+            oprot.writeFieldBegin('geneCoexpressions', TType.LIST, 5)
             oprot.writeListBegin(TType.DOUBLE, len(self.geneCoexpressions))
-            for iter88 in self.geneCoexpressions:
-                oprot.writeDouble(iter88)
+            for iter95 in self.geneCoexpressions:
+                oprot.writeDouble(iter95)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.queryExpressions is not None:
-            oprot.writeFieldBegin('queryExpressions', TType.LIST, 5)
+            oprot.writeFieldBegin('queryExpressions', TType.LIST, 6)
             oprot.writeListBegin(TType.DOUBLE, len(self.queryExpressions))
-            for iter89 in self.queryExpressions:
-                oprot.writeDouble(iter89)
+            for iter96 in self.queryExpressions:
+                oprot.writeDouble(iter96)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.queryCoexpressions is not None:
-            oprot.writeFieldBegin('queryCoexpressions', TType.LIST, 6)
+            oprot.writeFieldBegin('queryCoexpressions', TType.LIST, 7)
             oprot.writeListBegin(TType.DOUBLE, len(self.queryCoexpressions))
-            for iter90 in self.queryCoexpressions:
-                oprot.writeDouble(iter90)
+            for iter97 in self.queryCoexpressions:
+                oprot.writeDouble(iter97)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.status is not None:
-            oprot.writeFieldBegin('status', TType.I32, 7)
+            oprot.writeFieldBegin('status', TType.I32, 8)
             oprot.writeI32(self.status)
             oprot.writeFieldEnd()
         if self.statusMsg is not None:
-            oprot.writeFieldBegin('statusMsg', TType.STRING, 8)
+            oprot.writeFieldBegin('statusMsg', TType.STRING, 9)
             oprot.writeString(self.statusMsg.encode('utf-8') if sys.version_info[0] == 2 else self.statusMsg)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1021,30 +1040,30 @@ class PValueGeneArgs(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.genes = []
-                    (_etype94, _size91) = iprot.readListBegin()
-                    for _i95 in range(_size91):
-                        _elem96 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
-                        self.genes.append(_elem96)
+                    (_etype101, _size98) = iprot.readListBegin()
+                    for _i102 in range(_size98):
+                        _elem103 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.genes.append(_elem103)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.geneScores = []
-                    (_etype100, _size97) = iprot.readListBegin()
-                    for _i101 in range(_size97):
-                        _elem102 = iprot.readDouble()
-                        self.geneScores.append(_elem102)
+                    (_etype107, _size104) = iprot.readListBegin()
+                    for _i108 in range(_size104):
+                        _elem109 = iprot.readDouble()
+                        self.geneScores.append(_elem109)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.LIST:
                     self.geneRanks = []
-                    (_etype106, _size103) = iprot.readListBegin()
-                    for _i107 in range(_size103):
-                        _elem108 = iprot.readI32()
-                        self.geneRanks.append(_elem108)
+                    (_etype113, _size110) = iprot.readListBegin()
+                    for _i114 in range(_size110):
+                        _elem115 = iprot.readI32()
+                        self.geneRanks.append(_elem115)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1070,22 +1089,22 @@ class PValueGeneArgs(object):
         if self.genes is not None:
             oprot.writeFieldBegin('genes', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.genes))
-            for iter109 in self.genes:
-                oprot.writeString(iter109.encode('utf-8') if sys.version_info[0] == 2 else iter109)
+            for iter116 in self.genes:
+                oprot.writeString(iter116.encode('utf-8') if sys.version_info[0] == 2 else iter116)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.geneScores is not None:
             oprot.writeFieldBegin('geneScores', TType.LIST, 3)
             oprot.writeListBegin(TType.DOUBLE, len(self.geneScores))
-            for iter110 in self.geneScores:
-                oprot.writeDouble(iter110)
+            for iter117 in self.geneScores:
+                oprot.writeDouble(iter117)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.geneRanks is not None:
             oprot.writeFieldBegin('geneRanks', TType.LIST, 4)
             oprot.writeListBegin(TType.I32, len(self.geneRanks))
-            for iter111 in self.geneRanks:
-                oprot.writeI32(iter111)
+            for iter118 in self.geneRanks:
+                oprot.writeI32(iter118)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.useRank is not None:
@@ -1144,20 +1163,20 @@ class PValueDatasetArgs(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.datasets = []
-                    (_etype115, _size112) = iprot.readListBegin()
-                    for _i116 in range(_size112):
-                        _elem117 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
-                        self.datasets.append(_elem117)
+                    (_etype122, _size119) = iprot.readListBegin()
+                    for _i123 in range(_size119):
+                        _elem124 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.datasets.append(_elem124)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.datasetWeights = []
-                    (_etype121, _size118) = iprot.readListBegin()
-                    for _i122 in range(_size118):
-                        _elem123 = iprot.readDouble()
-                        self.datasetWeights.append(_elem123)
+                    (_etype128, _size125) = iprot.readListBegin()
+                    for _i129 in range(_size125):
+                        _elem130 = iprot.readDouble()
+                        self.datasetWeights.append(_elem130)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1178,15 +1197,15 @@ class PValueDatasetArgs(object):
         if self.datasets is not None:
             oprot.writeFieldBegin('datasets', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.datasets))
-            for iter124 in self.datasets:
-                oprot.writeString(iter124.encode('utf-8') if sys.version_info[0] == 2 else iter124)
+            for iter131 in self.datasets:
+                oprot.writeString(iter131.encode('utf-8') if sys.version_info[0] == 2 else iter131)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.datasetWeights is not None:
             oprot.writeFieldBegin('datasetWeights', TType.LIST, 3)
             oprot.writeListBegin(TType.DOUBLE, len(self.datasetWeights))
-            for iter125 in self.datasetWeights:
-                oprot.writeDouble(iter125)
+            for iter132 in self.datasetWeights:
+                oprot.writeDouble(iter132)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1243,10 +1262,10 @@ class PValueResult(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.pvalues = []
-                    (_etype129, _size126) = iprot.readListBegin()
-                    for _i130 in range(_size126):
-                        _elem131 = iprot.readDouble()
-                        self.pvalues.append(_elem131)
+                    (_etype136, _size133) = iprot.readListBegin()
+                    for _i137 in range(_size133):
+                        _elem138 = iprot.readDouble()
+                        self.pvalues.append(_elem138)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1277,8 +1296,8 @@ class PValueResult(object):
         if self.pvalues is not None:
             oprot.writeFieldBegin('pvalues', TType.LIST, 2)
             oprot.writeListBegin(TType.DOUBLE, len(self.pvalues))
-            for iter132 in self.pvalues:
-                oprot.writeDouble(iter132)
+            for iter139 in self.pvalues:
+                oprot.writeDouble(iter139)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.status is not None:
@@ -1370,12 +1389,13 @@ PclResult.thrift_spec = (
     None,  # 0
     (1, TType.BOOL, 'success', None, None, ),  # 1
     (2, TType.LIST, 'datasetSizes', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'geneExpressions', (TType.DOUBLE, None, False), None, ),  # 3
-    (4, TType.LIST, 'geneCoexpressions', (TType.DOUBLE, None, False), None, ),  # 4
-    (5, TType.LIST, 'queryExpressions', (TType.DOUBLE, None, False), None, ),  # 5
-    (6, TType.LIST, 'queryCoexpressions', (TType.DOUBLE, None, False), None, ),  # 6
-    (7, TType.I32, 'status', None, None, ),  # 7
-    (8, TType.STRING, 'statusMsg', 'UTF8', None, ),  # 8
+    (3, TType.LIST, 'experimentNames', (TType.STRING, 'UTF8', False), None, ),  # 3
+    (4, TType.LIST, 'geneExpressions', (TType.DOUBLE, None, False), None, ),  # 4
+    (5, TType.LIST, 'geneCoexpressions', (TType.DOUBLE, None, False), None, ),  # 5
+    (6, TType.LIST, 'queryExpressions', (TType.DOUBLE, None, False), None, ),  # 6
+    (7, TType.LIST, 'queryCoexpressions', (TType.DOUBLE, None, False), None, ),  # 7
+    (8, TType.I32, 'status', None, None, ),  # 8
+    (9, TType.STRING, 'statusMsg', 'UTF8', None, ),  # 9
 )
 all_structs.append(PValueGeneArgs)
 PValueGeneArgs.thrift_spec = (

@@ -538,6 +538,7 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
     thread_arg.resGeneCoexpression = &result.geneCoexpressions;
     thread_arg.resQueryExpression = &result.queryExpressions;
     thread_arg.resQueryCoexpression = &result.queryCoexpressions;
+    thread_arg.resExperimentNames = &result.experimentNames;
 
     try {
         do_pcl_query(&thread_arg);
@@ -555,6 +556,7 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
     result.success = true;
     result.status = QueryStatus::Complete;
     result.__isset.status = true;
+    result.__isset.experimentNames = true;
     result.__isset.geneExpressions = settings.outputGeneExpression;
     result.__isset.geneCoexpressions = settings.outputGeneCoexpression;
     result.__isset.queryExpressions = settings.outputQueryExpression;
