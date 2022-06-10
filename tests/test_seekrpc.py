@@ -289,6 +289,8 @@ class TestSeekRPC:
         client = TestSeekRPC.client
 
         datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl']
+        dsetSampleNames = [['GSM340097', 'GSM340098', 'GSM340099', 'GSM340100'],
+                           ['GSM431121', 'GSM431122', 'GSM431123', 'GSM431124', 'GSM431125', 'GSM431126']]
         genes = ['10998', '10994']
         queryGenes = ['23658', '23659']
 
@@ -348,6 +350,17 @@ class TestSeekRPC:
             settings=settings)
         result = TestSeekRPC.runPclQuery(client, pclArgs)
         TestSeekRPC.checkPclVals(result.queryCoexpressions, "pclTestQueryCoExpr.txt")
+
+        # Check that experiment sample names are correct
+        expNameOffset = 0
+        numDatasets = len(result.datasetSizes)
+        for i in range(numDatasets):
+            numSamples = result.datasetSizes[i]
+            assert numSamples == len(dsetSampleNames[i])
+            for j in range(numSamples):
+                assert result.experimentNames[expNameOffset + j] == dsetSampleNames[i][j]
+            expNameOffset += numSamples
+
 
     def test_pclSettings(self):
         # Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
