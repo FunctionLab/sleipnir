@@ -582,7 +582,8 @@ void swap(PclQueryArgs &a, PclQueryArgs &b);
 std::ostream& operator<<(std::ostream& out, const PclQueryArgs& obj);
 
 typedef struct _PclResult__isset {
-  _PclResult__isset() : geneExpressions(false), geneCoexpressions(false), queryExpressions(false), queryCoexpressions(false), status(false), statusMsg(false) {}
+  _PclResult__isset() : experimentNames(false), geneExpressions(false), geneCoexpressions(false), queryExpressions(false), queryCoexpressions(false), status(false), statusMsg(false) {}
+  bool experimentNames :1;
   bool geneExpressions :1;
   bool geneCoexpressions :1;
   bool queryExpressions :1;
@@ -605,6 +606,7 @@ class PclResult : public virtual ::apache::thrift::TBase {
   virtual ~PclResult() noexcept;
   bool success;
   std::vector<int32_t>  datasetSizes;
+  std::vector<std::string>  experimentNames;
   std::vector<double>  geneExpressions;
   std::vector<double>  geneCoexpressions;
   std::vector<double>  queryExpressions;
@@ -621,6 +623,8 @@ class PclResult : public virtual ::apache::thrift::TBase {
   void __set_success(const bool val);
 
   void __set_datasetSizes(const std::vector<int32_t> & val);
+
+  void __set_experimentNames(const std::vector<std::string> & val);
 
   void __set_geneExpressions(const std::vector<double> & val);
 
@@ -639,6 +643,10 @@ class PclResult : public virtual ::apache::thrift::TBase {
     if (!(success == rhs.success))
       return false;
     if (!(datasetSizes == rhs.datasetSizes))
+      return false;
+    if (__isset.experimentNames != rhs.__isset.experimentNames)
+      return false;
+    else if (__isset.experimentNames && !(experimentNames == rhs.experimentNames))
       return false;
     if (__isset.geneExpressions != rhs.__isset.geneExpressions)
       return false;

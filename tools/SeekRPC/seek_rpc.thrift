@@ -11,6 +11,9 @@ enum QueryStatus {
     Error,
 }
 
+// Version to track compatibility across changes to the RPC interface
+const double RPCVersion = 1.3;
+
 // ### Seek Query Data Structures ###
 // Define the possible values for search method
 enum SearchMethod {
@@ -83,12 +86,13 @@ struct PclQueryArgs {
 struct PclResult {
     1: required bool success;
     2: required list<i32> datasetSizes;
-    3: optional list<double> geneExpressions;
-    4: optional list<double> geneCoexpressions;
-    5: optional list<double> queryExpressions;
-    6: optional list<double> queryCoexpressions;
-    7: optional QueryStatus status;
-    8: optional string statusMsg;
+    3: optional list<string> experimentNames;
+    4: optional list<double> geneExpressions;
+    5: optional list<double> geneCoexpressions;
+    6: optional list<double> queryExpressions;
+    7: optional list<double> queryCoexpressions;
+    8: optional QueryStatus status;
+    9: optional string statusMsg;
 }
 
 // Note that for backward compatibility if the geneScores for all
@@ -119,9 +123,6 @@ struct PValueResult {
     4: optional string statusMsg;
 }
 
-
-// Version to track compatibility across changes to the RPC interface
-const double RPCVersion = 1.2;
 
 /* Make seekQuery an asynchronous call and have a getStatus() call that returns
  *  status strings while the query is processing and then returns "Done Search"

@@ -43,6 +43,7 @@ struct pcl_thread_data {
     vector <double> *resGeneCoexpression;
     vector <double> *resQueryExpression;
     vector <double> *resQueryCoexpression;
+    vector <string> *resExperimentNames;
 };
 
 void *do_pcl_query(void *th_arg);

@@ -41,7 +41,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
             res = loadPvalueArrays(pvalueDir, this->speciesPvalueData[speciesName]);
             if (res == false) {
                 // Try creating the metadata from the raw random score outputs
-                res = initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
+                res = initializeGenePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
                 if (res == false) {
                     // Disable pvalue queries for this species
                     cerr << "WARNING: PValue queries disabled for (" << speciesName;
@@ -538,6 +538,7 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
     thread_arg.resGeneCoexpression = &result.geneCoexpressions;
     thread_arg.resQueryExpression = &result.queryExpressions;
     thread_arg.resQueryCoexpression = &result.queryCoexpressions;
+    thread_arg.resExperimentNames = &result.experimentNames;
 
     try {
         do_pcl_query(&thread_arg);
@@ -555,6 +556,7 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
     result.success = true;
     result.status = QueryStatus::Complete;
     result.__isset.status = true;
+    result.__isset.experimentNames = true;
     result.__isset.geneExpressions = settings.outputGeneExpression;
     result.__isset.geneCoexpressions = settings.outputGeneCoexpression;
     result.__isset.queryExpressions = settings.outputQueryExpression;

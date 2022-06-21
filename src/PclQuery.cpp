@@ -138,10 +138,12 @@ void *do_pcl_query(void *th_arg) {
     sizeD.resize(datasets);
 
     vector <vector<float>> d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression;
+    vector <vector<string>> vecExperimentNames;
     d_vecG.resize(datasets);
     d_vecQ.resize(datasets);
     d_vecCoexpression.resize(datasets);
     d_vecqCoexpression.resize(datasets);
+    vecExperimentNames.resize(datasets);
 
     //Qian added
     //vector<CSeekDataset *> vd; //(EXTRA)
@@ -167,7 +169,7 @@ void *do_pcl_query(void *th_arg) {
     firstprivate(genes, queries, datasets, outputCoexpression, outputQueryCoexpression, outputNormalized, outputExpression, \
     outputQueryExpression, NaN) \
     shared(sizeD, datasetNames, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
-    cc, platformMap, seekPlatforms, hasError, anError, RBP_P, dsetPcls) \
+    cc, platformMap, seekPlatforms, hasError, anError, RBP_P, dsetPcls, vecExperimentNames) \
     schedule(dynamic)
     for (i = 0; i < datasets; i++) {
         // CPCL *pp = vc[i];
@@ -175,6 +177,12 @@ void *do_pcl_query(void *th_arg) {
         size_t j, k;
         int ps = pp->GetExperiments();
         int gs = pp->GetExperiments();
+
+        // Get the experiment (sample) names for each dataset
+        vecExperimentNames[i].resize(ps);
+        for (int k = 0; k < ps; k++) {
+            vecExperimentNames[i][k] = pp->GetExperiment(k);
+        }
 
         CFullMatrix<float> *fq = NULL;
 
@@ -698,6 +706,9 @@ void *do_pcl_query(void *th_arg) {
             my->resQueryCoexpression->insert(my->resQueryCoexpression->end(),
                                              d_vecqCoexpression[i].begin(),
                                              d_vecqCoexpression[i].end());
+            my->resExperimentNames->insert(my->resExperimentNames->end(),
+                                             vecExperimentNames[i].begin(),
+                                             vecExperimentNames[i].end());
             if (i == 0) {
                 // Copy over the dataset sizes once
                 my->resDatasetSizes->insert(my->resDatasetSizes->end(),
