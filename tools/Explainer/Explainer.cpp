@@ -183,7 +183,7 @@ int main(int iArgs, char **aszArgs) {
                                            (sArgs.positives_flag && (dAnswer <= 0)) ||
                                            (sArgs.negatives_flag && (dAnswer > 0))))
                 continue;
-            if (((float) rand() / RAND_MAX) > sArgs.fraction_arg)
+            if (((float) rand() / (float) RAND_MAX) > sArgs.fraction_arg)
                 continue;
             if (sArgs.everything_flag && CMeta::IsNaN(dAnswer))
                 dAnswer = dValue ? (dValue - (1 / dValue)) : -FLT_MAX;

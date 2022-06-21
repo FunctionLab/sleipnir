@@ -436,7 +436,7 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < Dat.GetGenes(); ++i)
             for (j = (i + 1); j < Dat.GetGenes(); ++j)
                 if (!CMeta::IsNaN(Dat.Get(i, j)) &&
-                    (((float) rand() / RAND_MAX) > sArgs.subsample_arg))
+                    (((float) rand() / (float) RAND_MAX) > sArgs.subsample_arg))
                     Dat.Set(i, j, CMeta::GetNaN());
 
     if (sArgs.edges_arg) {

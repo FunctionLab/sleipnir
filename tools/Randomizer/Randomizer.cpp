@@ -51,7 +51,7 @@ int main(int iArgs, char **aszArgs) {
     dFrac /= Dat.GetGenes() * (Dat.GetGenes() - 1) / 2;
     for (i = 0; i < Dat.GetGenes(); ++i)
         for (j = (i + 1); j < Dat.GetGenes(); ++j)
-            if (((float) rand() / RAND_MAX) < dFrac)
+            if (((float) rand() / (float) RAND_MAX) < dFrac)
                 Dat.Set(i, j, 1);
 
     Dat.Save(sArgs.input_arg);

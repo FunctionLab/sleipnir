@@ -70,7 +70,7 @@ struct SortResults {
 };
 
 
-size_t PrintResults(vector <LIBSVM::Result> vecResults, ofstream &ofsm) {
+void PrintResults(vector <LIBSVM::Result> vecResults, ofstream &ofsm) {
     sort(vecResults.begin(), vecResults.end(), SortResults());
     int LabelVal;
     for (auto & vecResult : vecResults) {

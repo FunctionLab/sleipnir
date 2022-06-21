@@ -131,7 +131,7 @@ namespace Sleipnir {
                     iTotal += m_MatTransitions.Get(iState, i);
                 if ((iCur = rand()) == RAND_MAX)
                     iCur--;
-                iCur = (size_t)(((float) iCur / RAND_MAX) * iTotal);
+                iCur = (size_t)(((float) iCur / (float) RAND_MAX) * iTotal);
                 for (i = 0; (i + 1) < m_MatTransitions.GetColumns(); ++i) {
                     iTotal -= m_MatTransitions.Get(iState, i);
                     if (iCur >= iTotal)

@@ -196,7 +196,7 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < Slim.GetSlims(); ++i)
             mapGenes[&Slim.GetGene(i, rand() % Slim.GetGenes(i))] = true;
         for (iterGene = mapGenes.begin(); iterGene != mapGenes.end(); ++iterGene)
-            if (((float) rand() / RAND_MAX) < sArgs.test_arg)
+            if (((float) rand() / (float) RAND_MAX) < sArgs.test_arg)
                 iterGene->second = true;
     }
 

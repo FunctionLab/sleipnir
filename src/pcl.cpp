@@ -1767,7 +1767,7 @@ namespace Sleipnir {
         dAve = dStd = 0;
         for (k = i = 0; i < GetGenes(); ++i)
             for (j = (i + 1); j < GetGenes(); ++j) {
-                if (((float) rand() / RAND_MAX) >= dSample)
+                if (((float) rand() / (float) RAND_MAX) >= dSample)
                     continue;
                 vecdEuclidean.push_back(d = (float) Euclidean.Measure(Get(i),
                                                                       GetExperiments(), Get(j), GetExperiments(),

@@ -35,16 +35,16 @@ struct STF {
         for (i = 0; i < iLength; ++i)
             m_strBS += c_acAlphabetExons[rand() % (ARRAYSIZE(c_acAlphabetExons) - 1)];
         m_dActivity = (float) ((CStatistics::SampleNormalStandard() * dStdev) + dAverage);
-        if (((float) rand() / RAND_MAX) < 0.5)
+        if (((float) rand() / (float) RAND_MAX) < 0.5)
             m_dActivity *= -1;
 
         m_veciGenes.reserve((size_t)(iGenes * dPGene + 1));
         for (i = 0; i < iGenes; ++i)
-            if (((float) rand() / RAND_MAX) < dPGene)
+            if (((float) rand() / (float) RAND_MAX) < dPGene)
                 m_veciGenes.push_back(i);
         m_veciConditions.reserve((size_t)(iConditions * dPCondition + 1));
         for (i = 0; i < iConditions; ++i)
-            if (((float) rand() / RAND_MAX) < dPCondition)
+            if (((float) rand() / (float) RAND_MAX) < dPCondition)
                 m_veciConditions.push_back(i);
     }
 

@@ -105,7 +105,7 @@ int cliques(const gengetopt_args_info &sArgs, const CDat &Dat, const CDat &DatKn
     for (i = 0; i < veciGenes.size(); ++i)
         veciGenes[i] = i;
     while (veciGenes[0] <= (Dat.GetGenes() - veciGenes.size())) {
-        if (!rand() && (((float) rand() / RAND_MAX) < 1e-3)) {
+        if (!rand() && (((float) rand() / (float) RAND_MAX) < 1e-3)) {
             for (i = 0; i < veciGenes.size(); ++i)
                 cerr << veciGenes[i] << ',';
             cerr << endl;
