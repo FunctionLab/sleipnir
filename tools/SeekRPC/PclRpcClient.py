@@ -1,5 +1,6 @@
 import sys
 import time
+import re
 import argparse
 import importlib
 from thrift.transport import TTransport, TSocket
@@ -74,7 +75,7 @@ def runQuery(args):
     retval = -1
 
     settings = SeekRPC.PclSettings(
-        outputNormalized = True,
+        outputNormalized = False,
         outputGeneExpression = args.zexp,
         outputGeneCoexpression = args.zcoexp,
         outputQueryExpression = args.zqexp,
@@ -97,17 +98,28 @@ def runQuery(args):
 
         # Print to command line
         writeResults(sys.stdout, args, result)
+
         # Example of accessing expressions in a gene ordered way
-        # if result.geneExpressions and len(result.geneExpressions) > 0:
-        #     print('## Ordered Printout ##')
-        #     numGenes = len(args.genes)
-        #     offset = 0;
-        #     for i, numSamples in enumerate(result.datasetSizes):
-        #         for j in range(numGenes):
-        #             print(f'dset: {i}, gene: {j}')
-        #             for k in range(numSamples):
-        #                 print(f'val: {result.geneExpressions[offset]}')
-        #                 offset += 1
+        if result.geneExpressions and len(result.geneExpressions) > 0:
+            print('## Ordered Printout ##')
+            assert len(result.datasetSizes) == len(args.datasets)
+            geneRowOffset = 0
+            expNameOffset = 0
+            for i, numSamples in enumerate(result.datasetSizes):
+                # strip any .pcl extension from the dataset name
+                dsetName = re.sub('\.pcl.*', '', args.datasets[i])
+                print(f'DATASET: {dsetName}')
+                # Print out the experiment (sample) names for each dataset
+                for j in range(numSamples):
+                    print(f'{result.experimentNames[expNameOffset + j]}  ', end='')
+                print()
+                expNameOffset += numSamples
+                for j in range(len(args.genes)):
+                    print(f'GENE({args.genes[j]}): ', end='')
+                    for k in range(numSamples):
+                        print(f'{result.geneExpressions[geneRowOffset + k]:.3f}  ', end='')
+                    print()
+                    geneRowOffset += numSamples
         retval = 0
     else:
         print(f'query error: {result.statusMsg}')

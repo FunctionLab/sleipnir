@@ -161,7 +161,7 @@ int main(int iArgs, char **aszArgs) {
     vector <pair<string, string>> vecpairstrChosen;
     for (size_t i = 0; i < vecstrGenes.size(); ++i) {
         for (size_t j = (i + 1); j < vecstrGenes.size(); ++j) {
-            if (((float) rand() / RAND_MAX) < dSubsample) {
+            if (((float) rand() / (float) RAND_MAX) < dSubsample) {
                 vecpairstrChosen.push_back(make_pair(vecstrGenes[i], vecstrGenes[j]));
             }
         }

@@ -323,7 +323,7 @@ void callback_andersondarling(SCallbackVars &sCallback) {
     float d;
 
     std::default_random_engine generator;
-    std::uniform_real_distribution<float> dist(0, RAND_MAX);
+    std::uniform_real_distribution<float> dist(0, (float) RAND_MAX);
 
     iGenes = sCallback.m_pDatCur->GetGenes();
     vecdValues.reserve((size_t)(iGenes * iGenes * c_dFrac));
@@ -405,7 +405,7 @@ void callback_wei(SCallbackVars &sCallback) {
                     iTwo = vecveciGenes[j][iB];
                     if (vecsetiGenes[iTwo].find(i) != vecsetiGenes[iTwo].end())
                         continue;
-                    if (!(iA || iB) && (((float) rand() / RAND_MAX) < c_dFrac))
+                    if (!(iA || iB) && (((float) rand() / (float) RAND_MAX) < c_dFrac))
                         vecdValues.push_back(d);
                     dSum += d;
                     vecdSums[iOne] += d;

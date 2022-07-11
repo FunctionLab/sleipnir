@@ -321,7 +321,7 @@ int main(int iArgs, char **aszArgs) {
                     //float fl = new_m[j][k];
                     float fl = (new_m[j][k] - mean) / stdev; //row normalization
                     if (isnan(fl) || isinf(fl)) {
-                        fprintf(stderr, "A %.2f\t%.2f\t%.2f\t%.2f\tD%d\tG%d\tE%d/%d\n", fl, mean,
+                        fprintf(stderr, "A %.2f\t%.2f\t%.2f\t%.2f\tD%d\tG%d\tE%d/%zu\n", fl, mean,
                                 stdev, new_m[j][k], i, j, k, cp->GetExperiments());
                     }
                     mm[i][j].push_back(fl);
@@ -344,7 +344,7 @@ int main(int iArgs, char **aszArgs) {
                 for (j = 0; j < totGenes; j++) {
                     float fl = (mm[i][j][k] - mean) / stdev;
                     if (isnan(fl) || isinf(fl)) {
-                        fprintf(stderr, "B %.2f\t%.2f\t%.2f\t%.2f\tD%d\tG%d\tE%d/%d\n", fl, mean,
+                        fprintf(stderr, "B %.2f\t%.2f\t%.2f\t%.2f\tD%d\tG%d\tE%d/%zu\n", fl, mean,
                                 stdev, mm[i][j][k], i, j, k, cp->GetExperiments());
                     }
                     mm[i][j][k] = fl;
@@ -352,8 +352,8 @@ int main(int iArgs, char **aszArgs) {
             }
 
             for (j = 0; j < totGenes; j++)
-                delete new_m[j];
-            delete new_m;
+                delete[] new_m[j];
+            delete[] new_m;
         }
 
         FILE *pFile;
@@ -572,7 +572,7 @@ int main(int iArgs, char **aszArgs) {
                 allGenes.insert(tok[si]);
             }
             if (ci % 100 == 0) {
-                fprintf(stderr, "Gene Number %d\n", ci);
+                fprintf(stderr, "Gene Number %zu\n", ci);
             }
             ci++;
         }
@@ -603,7 +603,7 @@ int main(int iArgs, char **aszArgs) {
                 Dat.Set(tG, oG, fG);
             }
             if (ci % 100 == 0) {
-                fprintf(stderr, "Gene Number %d\n", ci);
+                fprintf(stderr, "Gene Number %zu\n", ci);
             }
             ci++;
         }
@@ -860,7 +860,7 @@ int main(int iArgs, char **aszArgs) {
                 limitedGenes.push_back(vecstrGenes[i]);
             }
         }
-        fprintf(stderr, "%d / %d genes to be written!\n", limitedGenes.size(), m.GetNumSet());
+        fprintf(stderr, "%zu / %d genes to be written!\n", limitedGenes.size(), m.GetNumSet());
         CDat NewDat;
         NewDat.Open(limitedGenes);
         for (i = 0; i < limitedGenes.size(); i++) {

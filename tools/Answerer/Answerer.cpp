@@ -129,7 +129,7 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < vecpPositives.size(); ++i) {
             size_t iGenes;
 
-            if (iGenes = vecpPositives[i]->GetGenes())
+            if ((iGenes = vecpPositives[i]->GetGenes()))
                 setstrGenes.insert(vecpPositives[i]->GetGene(rand() % iGenes).GetName());
         }
         while (setstrGenes.size() < (sArgs.test_arg * Dat.GetGenes()))
@@ -174,8 +174,8 @@ int main(int iArgs, char **aszArgs) {
         dPositives = (float) iPositives / iTotal;
         for (i = 0; i < Dat.GetGenes(); ++i)
             for (j = (i + 1); j < Dat.GetGenes(); ++j)
-                if (((float) rand() / RAND_MAX) < sArgs.scramble_arg)
-                    Dat.Set(i, j, (((float) rand() / RAND_MAX) < dPositives) ? 1.0f : 0);
+                if (((float) rand() / (float) RAND_MAX) < sArgs.scramble_arg)
+                    Dat.Set(i, j, (((float) rand() / (float) RAND_MAX) < dPositives) ? 1.0f : 0);
     }
 
     Dat.Save(sArgs.output_arg);

@@ -749,7 +749,7 @@ namespace Sleipnir {
         Attach(pDataset);
         for (i = 0; i < m_Mask.GetSize(); ++i)
             for (j = (i + 1); j < m_Mask.GetSize(); ++j)
-                m_Mask.Set(i, j, (m_Mask.Get(i, j) && (((float) rand() / RAND_MAX) < dFraction)));
+                m_Mask.Set(i, j, (m_Mask.Get(i, j) && (((float) rand() / (float) RAND_MAX) < dFraction)));
     }
 
 /*!

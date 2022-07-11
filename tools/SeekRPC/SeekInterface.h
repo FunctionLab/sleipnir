@@ -102,6 +102,7 @@ inline const char* queryTypeName(QueryType qtype) {
   case QueryType::Pvalue:
     return "PvalueQuery";
   }
+  return "UnknownQueryType";
 }
 
 void setResultError(QueryType qtype, QueryStatus::type status, string errMsg, ResultUnion_t res);

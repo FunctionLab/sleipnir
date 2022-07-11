@@ -77,7 +77,7 @@ int main(int iArgs, char **aszArgs) {
                 continue;
             dLogIn = dLogOut = 0;
             for (i = 0; i < PCL.GetGenes(); ++i) {
-                if (((sArgs.neighbors_arg < 1) && (((float) rand() / RAND_MAX) > sArgs.neighbors_arg)) ||
+                if (((sArgs.neighbors_arg < 1) && (((float) rand() / (float) RAND_MAX) > sArgs.neighbors_arg)) ||
                     (i == iPCL) || (veciPCL2Dat[i] == -1) ||
                     CMeta::IsNaN(d = Dat.Get(iDat, veciPCL2Dat[i])))
                     continue;

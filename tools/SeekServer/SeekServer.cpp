@@ -33,6 +33,8 @@ char *available;
 map<string, int> DNAME_MAP;
 map<int, string> DNAME_RMAP;
 
+int return_sucess = 0;
+
 pthread_mutex_t mutexGet;
 
 void sigchld_handler(int s) {
@@ -177,9 +179,9 @@ void *do_query(void *th_arg) {
     THREAD_OCCUPIED[threadid] = 0;
     pthread_mutex_unlock(&mutexGet);
 
-    int ret = 0;
 
-    pthread_exit((void *) ret);
+
+    pthread_exit(&return_sucess);
 }
 
 int main(int iArgs, char **aszArgs) {

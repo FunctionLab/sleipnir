@@ -366,7 +366,7 @@ bool loadPvalueArrays(string dirname, PValueData &pvalueData) {
     return true;
 }
 
-bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData &pvalueData) {
+bool initializeGenePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData &pvalueData) {
     int numGenes = seekCentral.roAttr->m_vecstrGenes.size();
     int numRandFiles = 0;
     vector <string> gscoreFiles;
@@ -431,19 +431,21 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData 
     write2DVector(pvalueData.randomSc, scoreFile);
     write2DVector(pvalueData.randomRank, rankFile);
 
-// GW - comment out loading dataset parameter file for now
-#if 0
-    string param_dir = sArgs.param_dir_arg;
-    int numDatasets = seekCentral.m_vecstrDatasets.size();
-    pvalueData.dsetScore.resize(numDatasets);
-    for (i = 0; i < numDatasets; i++) {
-        string param_file = param_dir + "/" + seekCentral.m_vecstrDatasets[i] + ".param";
-        pvalueData.dsetScore[i] = vector<struct parameter>();
-        if (!ReadParameter(param_file, pvalueData.dsetScore[i])) {
-            fprintf(stderr, "Making this dataset null... (will always return insignificant)\n");
+    return true;
+}
+
+void initializeDatasetPvalue(CSeekCentral &seekCentral, char* datasetParamDir, PValueData &pvalueData) {
+    if (datasetParamDir) {
+        string param_dir = datasetParamDir;
+        int numDatasets = seekCentral.roAttr->m_vecstrDatasets.size();
+        pvalueData.dsetScore.resize(numDatasets);
+        for (int i = 0; i < numDatasets; i++) {
+            string param_file = param_dir + "/" + seekCentral.roAttr->m_vecstrDatasets[i] + ".param";
+            pvalueData.dsetScore[i] = vector<struct parameter>();
+            if (!ReadParameter(param_file, pvalueData.dsetScore[i])) {
+                fprintf(stderr, "Making this dataset null... (will always return insignificant)\n");
+            }
         }
     }
-#endif
-
-    return true;
+    return;
 }

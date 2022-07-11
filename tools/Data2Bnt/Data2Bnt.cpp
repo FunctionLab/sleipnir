@@ -308,7 +308,7 @@ int main_bnt(const gengetopt_args_info &sArgs, const vector <SFeature> &vecsFeat
                     iJ = get_feature(Dat.GetGene(iOne), vecsFeatures);
                     for (k = (j + 1); k < veciGenes.size(); ++k) {
                         if (((iTwo = veciGenes[k]) == -1) || !CMeta::IsNaN(Dat.Get(iOne, iTwo)) ||
-                            (((float) rand() / RAND_MAX) > sArgs.fraction_arg))
+                            (((float) rand() / (float) RAND_MAX) > sArgs.fraction_arg))
                             continue;
                         mapiiCur.clear();
                         mapiiCur[get_feature(Dat.GetGene(iTwo), vecsFeatures)] = 1;
@@ -477,7 +477,7 @@ int main_xrff(const gengetopt_args_info &sArgs, const vector <SFeature> &vecsFea
         } else {
             dWeight = (float) (iTotal - veciCounts[iterCount->first[0] - 1]) / iTotal;
             for (i = 0; i < iterCount->second; ++i) {
-                if (((float) rand() / RAND_MAX) > sArgs.fraction_arg)
+                if (((float) rand() / (float) RAND_MAX) > sArgs.fraction_arg)
                     continue;
                 cout << "      <instance weight='" << dWeight << "'>" << endl;
                 for (j = 0; j < iterCount->first.size(); ++j)

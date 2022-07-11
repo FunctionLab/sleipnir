@@ -216,8 +216,8 @@ bool CalculateWelch(const float &mean1, const float &stdev1, const int &size1,
     return true;
 }
 
-vector <string> Do_Pair_Proportion() {
-
+vector <string> * Do_Pair_Proportion() {
+    return nullptr;
 
 }
 

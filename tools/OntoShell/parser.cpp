@@ -214,7 +214,7 @@ bool CParser::Recurse(SLocation sLoc, bool fRecursive, bool fZeroes,
     if (!fRecursive)
         return true;
 
-    if (pOnto = sLoc.m_pOnto) {
+    if ((pOnto = sLoc.m_pOnto)) {
         if (sLoc.m_iNode == -1) {
             for (i = 0; i < pOnto->GetNodes(); ++i)
                 if (!pOnto->GetParents(i)) {

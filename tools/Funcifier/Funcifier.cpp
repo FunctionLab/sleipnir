@@ -144,6 +144,9 @@ int main(int iArgs, char **aszArgs) {
                                 if ((iSharedOne > 1) && (iSharedTwo > 1))
                                     continue;
                                 break;
+                            case ESharedIgnore:
+                                // No action
+                                break;
                         }
 
                         if (((iTwo = vecveciGenes[iF2][j]) != -1) &&

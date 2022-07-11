@@ -132,7 +132,7 @@ namespace Sleipnir {
         iPairs = psData->m_pPCL->GetGenes() * (psData->m_pPCL->GetGenes() - 1) / 2;
         for (psData->m_iOne = psData->m_iTwo = 0, iPair = psData->m_iOffset; iPair < iPairs;
              iPair += psData->m_iStep) {
-            if (((float) rand() / RAND_MAX) > psData->m_dFraction)
+            if (((float) rand() / (float) RAND_MAX) > psData->m_dFraction)
                 continue;
             for (i = 0, iCur = iPair; iCur >= (psData->m_pPCL->GetGenes() - 1 - i);
                  iCur -= psData->m_pPCL->GetGenes() - 1 - i++);

@@ -41,7 +41,11 @@ namespace LIBSVM {
     extern "C" {
 #define class Class2
 
-#include <libsvm/svm.h>
+#if defined __APPLE__
+    #include <svm.h>
+#else
+    #include <libsvm/svm.h>
+#endif
 
 #undef class
 
