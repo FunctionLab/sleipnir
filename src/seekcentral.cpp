@@ -1065,18 +1065,22 @@ namespace Sleipnir {
 
     bool CSeekCentral::FilterResults(const utype &iSearchDatasets) {
         utype j, k;
+
+        uint32_t minPercentDatasets = (int)(m_fPercentDatasetCoverage * iSearchDatasets);
+
         bool DEBUG = false;
         if (DEBUG) {
-          fprintf(stderr, "Aggregating genes\n");
-          fprintf(stderr, "Searching %d datasets\n", iSearchDatasets);
+            fprintf(stderr, "Aggregating genes\n");
+            fprintf(stderr, "Searching %d datasets\n", iSearchDatasets);
+	    fprintf(stderr, "Min datasets %d\n", minPercentDatasets);
         }
 
-        uint32_t minDatasets = (int)(m_fPercentDatasetCoverage * iSearchDatasets);
+
 
         for (j = 0; j < m_iGenes; j++) {
             //TO DO: make K=(int)(0.5*iSearchDatasets) a customizable parameter
             //TO DO: perhaps it is better to use K=(int)(0.5*(max of m_counts[]))??
-            if (m_counts[j] < minDatasets)
+            if (m_counts[j] < minPercentDatasets && m_counts[j] < 50) 
                 m_master_rank[j] = m_DEFAULT_NA;
             else if (m_sum_weight[j] == 0)
                 m_master_rank[j] = m_DEFAULT_NA;
