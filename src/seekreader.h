@@ -149,10 +149,13 @@ namespace Sleipnir {
             ofstream outfile;
             outfile.open(fileName);
             size_t i;
-            for (i = 0; i < vData.size() - 1; i++) {
-                outfile << vData[i] << " ";
+            for (i = 0; i < vData.size(); i++) {
+                if (i > 0) {
+                    outfile << " ";
+                }
+                outfile << vData[i];
             }
-            outfile << vData[vData.size() - 1] << endl;
+            outfile << endl;
             outfile.close();
             return true;
         }
@@ -177,10 +180,13 @@ namespace Sleipnir {
                     outfile << "None" << endl;
                     continue;
                 }
-                for (i = 0; i < vData[j].size() - 1; i++) {
-                    outfile << vData[j][i] << " ";
+                for (i = 0; i < vData[j].size(); i++) {
+                    if (i > 0) {
+                        outfile << " ";
+                    }
+                    outfile << vData[j][i];
                 }
-                outfile << vData[j][vData[j].size() - 1] << endl;
+                outfile << endl;
             }
             outfile.close();
             return true;

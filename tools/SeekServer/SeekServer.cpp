@@ -113,11 +113,13 @@ void *do_query(void *th_arg) {
         //bNormPlatform = false;
     }
 
+    float percentDatasetCoverage = 0.5;
+
     //fprintf(stderr, "%s\n%s\n%s\n%.2f\n", strOutputDir.c_str(), strQuery.c_str(), strSearchDatasets.c_str(), query_fraction_required);
 
     bool r = csu->InitializeQuery(strOutputDir, strQuery, strSearchDatasets, csfinal,
                              new_fd, query_fraction_required, genome_fraction_required, eDM, bSubtractGeneAvg,
-                             bNormPlatform, bNegativeCor, bCheckDsetSize);
+                             bNormPlatform, bNegativeCor, bCheckDsetSize, percentDatasetCoverage);
 
     //if r is false, then one of the query has no datasets
     //containing any of the query (because of CheckDatasets() in Initialize()),
@@ -259,7 +261,7 @@ int main(int iArgs, char **aszArgs) {
                              false, 1,
                              false, //negative cor (to be overwritten)
                              true, //check dataset size (to be overwritten)
-                             NULL, useNibble, sArgs.num_threads_arg)) //default
+                             NULL, useNibble, sArgs.num_threads_arg, 0.5)) //default
     {
         fprintf(stderr, "Error occurred!\n");
         return -1;
@@ -406,7 +408,7 @@ int main(int iArgs, char **aszArgs) {
                     fprintf(stderr, "Error receiving GeneGuideSet from client!\n");
             }
         }
-    
+
         vector <string> searchParameterTokens;
         fprintf(stderr, "%s\n", strSearchParameter.c_str());
         CMeta::Tokenize(strSearchParameter.c_str(), searchParameterTokens, "_");
